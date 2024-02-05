@@ -1,95 +1,137 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+import { useEffect, useState } from "react";
+import styles from './page.module.css';
+import * as OpusRecorder from './logic/RecorderActions';
+import { useRouter } from 'next/navigation';
+import AudioPlayer from "./components/AudioPlayer";
+import { useChatStore } from "./logic/ChatStore";
+//import { AppProps } from "next/app";
+import { toggleAudio } from "./logic/PlayerActions";
 
-export default function Home() {
+export default function Page(){
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [text, setText] = useState('Your friend, only better.');
+  const [color, setColor] = useState('white');
+  var ttsText = useChatStore((state) => state.ttsText);
+  var images = useChatStore((state) => state.images);
+  var playerState = useChatStore((state) => state.playerState);
+  var status_images = useChatStore((state) => state.loadingImages);
+  var sttText = useChatStore((state) => state.sttText);
+  var topic = useChatStore((state) => state.topic);
+  var apiState = useChatStore((state) => state.apiState);
+  const router = useRouter();
+
+  useEffect(() => {
+
+    //Wait till NextJS rehydration completes
+    setIsHydrated(true);
+    toggleAudio();
+
+    const handleKeyDown = (event) => {
+      if (event.key != "k" || event.repeat) {
+        return;
+      }
+      OpusRecorder.startRecording(router);
+      setText('I am hearing you.');
+      setColor('red');
+    };
+    
+    const handleKeyUp = (event) => {
+      if(event.key == "k"){
+        OpusRecorder.stopRecording(true);
+        setText('Your friend, only better.');
+        setColor('white');
+      }
+    };
+
+    const clickOnAudio = (event) => {
+      if(playerState == 'playing'){
+        toggleAudio();
+      }
+      event.target.blur();
+    }
+
+    console.log(images.length);
+
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    const audioButton = document.querySelector('#audioButton');
+    audioButton?.addEventListener('click', clickOnAudio);
+
+    console.log(images.length)
+    // Cleanup function to remove the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      audioButton?.removeEventListener('click', clickOnAudio);
+    };
+  }, []); // Empty dependency array means this effect runs once on mount
+
+  if (!isHydrated) {
+    return <div className={styles.main}>Loading...</div>;
+  }
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className={styles.grid}>
+      <section className={styles.visualization}>
+        <div className={styles.inline}>
+          <h2 className={styles.contenido_titulo}>Visualization</h2>
+          <button
+            onClick={toggleAudio}
+            className={styles.reproduccion}
+            id="audioReproduccion"
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+            Pause / Play
+          </button>
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+        {images.map((image) => (
+          <div className={styles.contenido}>
+            <img src={image} className={styles.images} alt="Image" />
+          </div>
+        ))}
+        <div className={styles.contenido}>
+          <p>{
+          (ttsText || "...")
+          }</p>
+        </div>
+      </section>
+      <section className={styles.main}>
+        <div className={styles.center}>
+          <div className={styles.mindy}>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          </div>
+        </div>
+        <div className={styles.text_center}>
+          <h1>Mindy</h1>
+          <p style={{color: color}}>{text}</p>
+        </div>
+      </section>
+      <section>
+        <div className={styles.mb_1}>
+          <h2>Topic:</h2>
+          <p>{(topic || "Not yet")}</p>
+        </div>
+        <div>
+          <h2>Status:</h2>
+          <p>{(apiState ? apiState[0].toUpperCase() +
+        apiState.slice(1) : "...")}</p>
+        </div>
+        <div style={{display: (sttText) ? 'block' : 'none'}} className={styles.margin_superior}>
+          <h2 className={styles.contenido_titulo}>You asked for</h2>
+          <div className={styles.contenido_2}>
+              <p>{sttText}</p>
+          </div>
+        </div>
+        <div className={styles.contenido_3}>
+            <p>Hold SPACE to start talking</p>
+        </div>
+      </section>
+      <AudioPlayer />
     </main>
   );
 }
