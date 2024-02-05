@@ -41,7 +41,8 @@ export const submitMessage = async (message: Message) => {
               that focuses on creating AI solutions for businesses.
               Mindset was created on 2021. Mindy was created on 2022.
               The CEO is Kamila Ureña. The CTO is Jorge Baez. 
-              Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous        
+              Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.
+              When user requests an image, you generate a description and then generate the image.    
             `,
     role: "system",
     loading: true,

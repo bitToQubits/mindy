@@ -80,12 +80,24 @@
 
 .images{
   object-fit: cover;
-  width: 310px;
-  height: 300px;
+  width: 315px;
+  height: 315px;
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
   border-radius: 5px;
 }
+
+.download{
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 5px;
+  background-color: #495057;
+  color: white;
+  text-align: center;
+  cursor: pointer;
+}
+
 .reproduccion{
   padding: 0.5rem;
 }
@@ -133,23 +145,58 @@
   border-radius: var(--border-radius);
 }
 
-.mindy{
+.mindy {
+  position: relative;
   width: 400px;
   height: 400px;
-  border: 10px solid transparent;
-  border-radius: 50%; 
-  box-shadow: 0 0 10px 5px red;
-  background-color: #000000;
-  animation: pulse 1s infinite alternate; 
+  background: linear-gradient(red,black);
+  border-radius: 50%;
+  animation: ani 2s linear infinite;
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 10px 5px red;
+
+@keyframes ani {
+  from {
+      transform: rotate(0deg);
   }
-  100% {
-    box-shadow: 0 0 20px 10px red;
+  to {
+      transform: rotate(360deg);
   }
+}
+
+.mindy:after {
+  content:'';
+  position: absolute;
+  top: 35px;
+  right: 35px;
+  bottom: 35px;
+  left: 35px;
+  border-radius: 50%;
+  background-color: black;
+
+}
+.mindy  span {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(red,black);
+  border-radius: 50%;
+}
+.mindy span:nth-child(1) {
+  filter: blur(5px);
+
+}
+
+.mindy span:nth-child(2) {
+  filter: blur(10px);
+}
+
+.mindy span:nth-child(3) {
+  filter: blur(20px);
+}
+
+.mindy span:nth-child(4) {
+  filter: blur(55px);
 }
 
 .code {

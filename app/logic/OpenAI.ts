@@ -118,10 +118,6 @@ const paramKeys = [
 ];
 
 function generate_image(prompt: string){
-  set((state) => ({
-    loadingImages: true
-  }));
-
   const payload = JSON.stringify({
     prompt: prompt,
     model: "dall-e-3",
@@ -150,6 +146,9 @@ function generate_image(prompt: string){
         set((state) => ({
           topic: "Invalid Image Request",
         }));
+        set((state) => ({
+          loadingImages: false
+        }));
         return;
       }
       res.on("data", (res) => {
@@ -168,11 +167,9 @@ function generate_image(prompt: string){
         }));
         console.log(get().images)
 
-        if(get().images.length >= 2){
           set((state) => ({
             loadingImages: false
           }));
-        }
       });
       res.on("end", () => {
         set((state) => ({
@@ -278,9 +275,6 @@ export async function streamCompletion(
         const content = parsed.choices[0]?.delta?.content;
         const toolCalls = parsed.choices[0]?.delta?.tool_calls;
         if (toolCalls) {
-            set((state) => ({
-              apiState: "Thinking of a image",
-            }));
             for (const toolCall of toolCalls) {
               functionName = (toolCall.function.name) ? toolCall.function.name : functionName;
               sum+=toolCall.function.arguments;
@@ -304,6 +298,12 @@ export async function streamCompletion(
       switch(functionName){
         case "generate_image":
           generate_image(functionArgs.prompt);
+          set((state) => ({
+            apiState: "Thinking of a image",
+          }));
+          set((state) => ({
+            loadingImages: true
+          }));
           break;
       }
 

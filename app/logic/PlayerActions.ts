@@ -38,23 +38,8 @@ const getVars = (): VarsShape => {
 function splitSentences(text: string | undefined) {
   if (!text) return [];
   const sentences = text.match(/[^.!?]+[.!?]/g) || [text];
-  const chunks = [];
 
-  let chunk = "";
-  for (const sentence of sentences) {
-    chunk += sentence;
-    const thisChunkSize = chunks.length;
-    if (chunk.length >= thisChunkSize) {
-      chunks.push(chunk);
-      chunk = "";
-    }
-  }
-
-  if (chunk.length > 0) {
-    chunks.push(chunk);
-  }
-
-  return chunks;
+  return sentences;
 }
 
 const chunkify = (text: string | undefined) => {
@@ -190,8 +175,14 @@ const fetchAudio = async (idx: number) => {
         playAudio(idx);
       }
     }
+    set((state) => ({
+      apiState: "ok",
+    }));
   } catch (error) {
     console.error(error);
+    set((state) => ({
+      apiState: "error",
+    }));
   }
 
   set({ playerApiState: "idle" });

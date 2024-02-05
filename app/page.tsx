@@ -7,6 +7,7 @@ import AudioPlayer from "./components/AudioPlayer";
 import { useChatStore } from "./logic/ChatStore";
 //import { AppProps } from "next/app";
 import { toggleAudio } from "./logic/PlayerActions";
+import { IconDownload } from "@tabler/icons-react";
 
 export default function Page(){
   const [isHydrated, setIsHydrated] = useState(false);
@@ -44,33 +45,26 @@ export default function Page(){
       }
     };
 
-    const clickOnAudio = (event) => {
-      if(playerState == 'playing'){
-        toggleAudio();
-      }
-      event.target.blur();
-    }
-
     console.log(images.length);
 
     // Add event listener
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
-    const audioButton = document.querySelector('#audioButton');
-    audioButton?.addEventListener('click', clickOnAudio);
-
     console.log(images.length)
     // Cleanup function to remove the event listener when the component unmounts
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      audioButton?.removeEventListener('click', clickOnAudio);
     };
   }, []); // Empty dependency array means this effect runs once on mount
 
   if (!isHydrated) {
     return <div className={styles.main}>Loading...</div>;
+  }
+
+  function Download(url) {
+    document.location = url;
   }
 
   return (
@@ -89,6 +83,9 @@ export default function Page(){
         {images.map((image) => (
           <div className={styles.contenido}>
             <img src={image} className={styles.images} alt="Image" />
+              <button className={styles.download} onClick={() => Download(image)}>
+              <IconDownload />
+              </button>
           </div>
         ))}
         <div className={styles.contenido}>
@@ -99,7 +96,7 @@ export default function Page(){
       </section>
       <section className={styles.main}>
         <div className={styles.center}>
-          <div className={styles.mindy}>
+          <div className={styles.mindy} style={{animationPlayState: (playerState == "playing" || status_images) ? 'running' : 'paused'}}>
           <span></span>
           <span></span>
           <span></span>
@@ -128,7 +125,7 @@ export default function Page(){
           </div>
         </div>
         <div className={styles.contenido_3}>
-            <p>Hold SPACE to start talking</p>
+            <p>Hold K to start talking</p>
         </div>
       </section>
       <AudioPlayer />
