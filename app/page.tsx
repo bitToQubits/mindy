@@ -22,6 +22,10 @@ export default function Page(){
   var apiState = useChatStore((state) => state.apiState);
   const router = useRouter();
 
+  function pausar(){
+    toggleAudio();
+  }
+
   useEffect(() => {
 
     //Wait till NextJS rehydration completes
@@ -63,7 +67,7 @@ export default function Page(){
     return <div className={styles.main}>Loading...</div>;
   }
 
-  function Download(url) {
+  function Download(url : string) {
     document.location = url;
   }
 
@@ -73,11 +77,12 @@ export default function Page(){
         <div className={styles.inline}>
           <h2 className={styles.contenido_titulo}>Visualization</h2>
           <button
-            onClick={toggleAudio}
+            onClick={pausar}
             className={styles.reproduccion}
+            style={{display: (playerState == "playing" || status_images) ? 'block' : 'none'}}
             id="audioReproduccion"
           >
-            Pause / Play
+            Pause
           </button>
         </div>
         {images.map((image) => (
@@ -124,8 +129,11 @@ export default function Page(){
               <p>{sttText}</p>
           </div>
         </div>
-        <div className={styles.contenido_3}>
+        <div className={`${styles.contenido_3} ${styles.magin_superior_rem}`}>
             <p>Hold K to start talking</p>
+        </div>
+        <div className={`${styles.contenido_3} ${styles.magin_superior_rem_2}`}>
+            <p>Press C to change to text mode</p>
         </div>
       </section>
       <AudioPlayer />

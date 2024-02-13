@@ -65,20 +65,16 @@ export const initPlayback = () => {
   const checker = async () => {
     const { apiState, ttsText, playerApiState, playerAudioQueue } = get();
     const chunks = chunkify(ttsText);
-    console.log('Chunks after chunkify:', chunks); // Add logging here
     if (apiState === "loading") {
       // Remove the last "unfinished sentence" if we are loading
       chunks.pop();
     }
-    console.log('Chunks after possible pop:', chunks); // Add logging here
-    console.log(chunks.length, playerAudioQueue.length)
     if (chunks.length > playerAudioQueue.length) {
       const newElems = chunks.splice(playerAudioQueue.length);
       console.log('New elements:', newElems); // Add logging here
       if(newElems.length > 0)
         set({ playerAudioQueue: [...(playerAudioQueue || []), ...newElems] });
     }
-    console.log('Player audio queue:', playerAudioQueue); // Add logging here
     const firstIdleChunk = get().playerAudioQueue.findIndex(
       (chunk) => chunk.state === "text"
     );
@@ -212,6 +208,8 @@ export const toggleAudio = () => {
       set((state) => ({
         apiState: "ok",
       }));
+      set({ ttsText: "" });
+      set({ playerAudioQueue: [] });
     }
     set({ playerState: "paused" });
   } else if (playerState === "paused") {
