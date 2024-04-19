@@ -33,6 +33,7 @@ export default function Page(){
     
     window.ipc.on('message', (message: string) => {
       setMessage(message)
+      console.log(message)
     })
 
     const handleKeyDown = (event) => {
