@@ -1,18 +1,18 @@
 'use client';
 import { useEffect, useState } from "react";
-import styles from './page.module.css';
-import * as OpusRecorder from './logic/RecorderActions';
-import { useRouter } from 'next/navigation';
-import AudioPlayer from "./components/AudioPlayer";
-import { useChatStore } from "./logic/ChatStore";
+import styles from './css/page.module.css';
+import * as OpusRecorder from '../logic_frontend/RecorderActions';
+import AudioPlayer from "../components/AudioPlayer";
+import { useChatStore } from "../logic_frontend/ChatStore";
 //import { AppProps } from "next/app";
-import { toggleAudio } from "./logic/PlayerActions";
+import { toggleAudio } from "../logic_frontend/PlayerActions";
 import { IconDownload } from "@tabler/icons-react";
 
 export default function Page(){
   const [isHydrated, setIsHydrated] = useState(false);
   const [text, setText] = useState('Your friend, only better.');
   const [color, setColor] = useState('white');
+  const [message, setMessage] = useState('No message found')
   var ttsText = useChatStore((state) => state.ttsText);
   var images = useChatStore((state) => state.images);
   var playerState = useChatStore((state) => state.playerState);
@@ -20,25 +20,35 @@ export default function Page(){
   var sttText = useChatStore((state) => state.sttText);
   var topic = useChatStore((state) => state.topic);
   var apiState = useChatStore((state) => state.apiState);
-  const router = useRouter();
 
   function pausar(){
     toggleAudio();
   }
-
+  
   useEffect(() => {
-
+    
     //Wait till NextJS rehydration completes
     setIsHydrated(true);
     toggleAudio();
+    
+    window.ipc.on('message', (message: string) => {
+      setMessage(message)
+    })
 
     const handleKeyDown = (event) => {
-      if (event.key != "k" || event.repeat) {
+      if(!["k", "l"].includes(event.key)){
         return;
       }
-      OpusRecorder.startRecording(router);
-      setText('I am hearing you.');
-      setColor('red');
+      if (event.repeat) {
+        return;
+      }
+      if(event.key == "k"){
+        OpusRecorder.startRecording();
+        setText('I am hearing you.');
+        setColor('red');
+      }else{
+        window.ipc.send('message', 'Hello')
+      }
     };
     
     const handleKeyUp = (event) => {
@@ -72,7 +82,7 @@ export default function Page(){
   }
 
   return (
-    <main className={styles.grid}>
+    <main className={`${styles.fondo_oscuro} ${styles.grid}`}>
       <section className={styles.visualization}>
         <div className={styles.inline}>
           <h2 className={styles.contenido_titulo}>Visualization</h2>

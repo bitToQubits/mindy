@@ -6,7 +6,6 @@ import { assertIsError } from "./OpenAI";
 
 import { useChatStore } from "./ChatStore";
 import { submitMessage } from "./SubmitMessage";
-import { NextRouter } from "next/router";
 import { GSP_NO_RETURNED_VALUE } from "next/dist/lib/constants";
 
 const get = useChatStore.getState;
@@ -29,7 +28,7 @@ export const sendAudioData = async (blob: Blob) => {
   await submitAudio(newMessage, blob);
 };
 
-export const startRecording = async (router: NextRouter) => {
+export const startRecording = async () => {
   let recorder = get().recorder;
   console.log("start");
   set((state) => ({ audioChunks: [] }));
@@ -77,7 +76,8 @@ export const startRecording = async (router: NextRouter) => {
       };
 
       // @ts-ignore
-      recorder = new window.OpusMediaRecorder(
+
+      recorder = new OpusMediaRecorder(
         stream,
         options,
         workerOptions

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { useChatStore } from "../logic/ChatStore";
-import { initPlayback } from "../logic/PlayerActions";
+import { useChatStore } from "../logic_frontend/ChatStore";
+import { initPlayback } from "../logic_frontend/PlayerActions";
 
 const AudioStreamPlayer = () => {
   const playerRef = useChatStore((state) => state.playerRef);

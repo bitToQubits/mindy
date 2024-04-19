@@ -2,8 +2,7 @@ import { create } from "zustand";
 import { Message } from "./Message";
 import { persist } from "zustand/middleware";
 import { Chat } from "./Chat";
-import { SpeechRecognizer } from "microsoft-cognitiveservices-speech-sdk";
-import type { AudioChunk } from "./PlayerActions";
+import { AudioChunk } from "./PlayerActions";
 
 export type APIState = "idle" | "loading" | "error" | "ok" | "creating topic name" | "generating voice" | "Thinking of a image";
 export type AudioState = "idle" | "recording" | "transcribing" | "idle";
@@ -11,7 +10,6 @@ export type AudioState = "idle" | "recording" | "transcribing" | "idle";
 export const excludeFromState = [
   "currentAbortController",
   "recorder",
-  "recognizer",
   "recorderTimeout",
   "textInputValue",
   "apiState",
@@ -108,7 +106,6 @@ export interface ChatState {
 
   pushToTalkMode: boolean;
   recorder: MediaRecorder | undefined;
-  recognizer: SpeechRecognizer | undefined;
   recorderTimeout: ReturnType<typeof setTimeout> | undefined;
   submitNextAudio: boolean;
   audioState: AudioState;
@@ -155,7 +152,6 @@ export const initialState = {
   editingMessage: undefined,
 
   recorder: undefined,
-  recognizer: undefined,
   recorderTimeout: undefined,
   submitNextAudio: true,
   audioState: "idle" as AudioState,
