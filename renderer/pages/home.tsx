@@ -1,14 +1,23 @@
 'use client';
 import { useEffect, useState } from "react";
-import styles from './css/page.module.css';
+import styles from '../css/page.module.css';
 import * as OpusRecorder from '../logic_frontend/RecorderActions';
 import AudioPlayer from "../components/AudioPlayer";
 import { useChatStore } from "../logic_frontend/ChatStore";
 //import { AppProps } from "next/app";
 import { toggleAudio } from "../logic_frontend/PlayerActions";
 import { IconDownload } from "@tabler/icons-react";
+import {
+  addChat,
+  setPlayerMode,
+  setPushToTalkMode,
+} from "../logic_frontend/ChatActions";
+import { useRouter } from "next/router";
+
+const set = useChatStore.setState;
 
 export default function Page(){
+  const router = useRouter();
   const [isHydrated, setIsHydrated] = useState(false);
   const [text, setText] = useState('Your friend, only better.');
   const [color, setColor] = useState('white');
@@ -20,9 +29,24 @@ export default function Page(){
   var sttText = useChatStore((state) => state.sttText);
   var topic = useChatStore((state) => state.topic);
   var apiState = useChatStore((state) => state.apiState);
+  
+  const audioState = useChatStore((state) => state.audioState);
 
-  function pausar(){
-    toggleAudio();
+  const editingMessage = useChatStore((state) => state.editingMessage);
+
+  const pushToTalkMode = useChatStore((state) => state.pushToTalkMode);
+  
+  const activeChatId = useChatStore((state) => state.activeChatId);
+  const showTextDuringPTT = useChatStore((state) => state.showTextDuringPTT);
+  const showTextInput = !pushToTalkMode || showTextDuringPTT || editingMessage;
+
+  const modelChoiceSTT = useChatStore((state) => state.modelChoiceSTT);
+  const Recorder = OpusRecorder;
+
+  function pausar() {
+    if(playerState == "playing"){
+      toggleAudio();
+    }
   }
   
   useEffect(() => {
@@ -44,9 +68,12 @@ export default function Page(){
         return;
       }
       if(event.key == "k"){
-        OpusRecorder.startRecording();
-        setText('I am hearing you.');
-        setColor('red');
+        setPlayerMode(false);
+        if (audioState === "idle") {
+          Recorder.startRecording();
+        } else if (audioState === "transcribing") {
+          return;
+        }
       }else{
         window.ipc.send('message', 'Hello')
       }
@@ -54,9 +81,10 @@ export default function Page(){
     
     const handleKeyUp = (event) => {
       if(event.key == "k"){
-        OpusRecorder.stopRecording(true);
-        setText('Your friend, only better.');
-        setColor('white');
+        if (!activeChatId) {
+          addChat(router);
+        }
+        Recorder.stopRecording(true);
       }
     };
 
@@ -78,13 +106,13 @@ export default function Page(){
     return <div className={styles.main}>Loading...</div>;
   }
 
-  function Download(url : string) {
-    document.location = url;
-  }
+  // function Download(url : string) {
+  //   document.location = url;
+  // }
 
   return (
     <main className={`${styles.fondo_oscuro} ${styles.grid}`}>
-      <section className={styles.visualization}>
+      {/* <section className={styles.visualization}>
         <div className={styles.inline}>
           <h2 className={styles.contenido_titulo}>Visualization</h2>
           <button
@@ -109,7 +137,7 @@ export default function Page(){
           (ttsText || "...")
           }</p>
         </div>
-      </section>
+      </section> */}
       <section className={styles.main}>
         <div className={styles.center}>
           <div className={styles.mindy} style={{animationPlayState: (playerState == "playing" || status_images) ? 'running' : 'paused'}}>
@@ -124,7 +152,7 @@ export default function Page(){
           <p style={{color: color}}>{text}</p>
         </div>
       </section>
-      <section>
+      {/* <section>
         <div className={styles.mb_1}>
           <h2>Topic:</h2>
           <p>{(topic || "Not yet")}</p>
@@ -146,7 +174,7 @@ export default function Page(){
         <div className={`${styles.contenido_3} ${styles.magin_superior_rem_2}`}>
             <p>Press C to change to text mode</p>
         </div>
-      </section>
+      </section> */}
       <AudioPlayer />
     </main>
   );

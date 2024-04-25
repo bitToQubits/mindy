@@ -2,10 +2,10 @@ import { create } from "zustand";
 import { Message } from "./Message";
 import { persist } from "zustand/middleware";
 import { Chat } from "./Chat";
-import { AudioChunk } from "./PlayerActions";
+import type { AudioChunk } from "./PlayerActions";
 
 export type APIState = "idle" | "loading" | "error" | "ok" | "creating topic name" | "generating voice" | "Thinking of a image";
-export type AudioState = "idle" | "recording" | "transcribing" | "idle";
+export type AudioState = "idle" | "recording" | "transcribing" | "processing";
 
 export const excludeFromState = [
   "currentAbortController",
@@ -129,14 +129,14 @@ export interface ChatState {
   showTextDuringPTT: boolean;
   autoSendStreamingSTT: boolean;
   modelChoicesChat: string[] | undefined;
-  modelChoiceTTS: string | undefined;
-  modelChoiceSTT: string | undefined;
+  modelChoiceTTS: string | "11labs";
+  modelChoiceSTT: string | "whisper";
   textInputValue: string;
 }
 export const initialState = {
-  apiState: "ok" as APIState,
+  apiState: "idle" as APIState,
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || "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",
-  apiKey11Labs: process.env.NEXT_PUBLIC_11LABS_API_KEY || undefined,
+  apiKey11Labs: process.env.NEXT_PUBLIC_11LABS_API_KEY || "219171ffe1d5a59c4de9d4701090af89",
   apiKeyAzure: process.env.NEXT_PUBLIC_AZURE_API_KEY || undefined,
   apiKeyAzureRegion: process.env.NEXT_PUBLIC_AZURE_REGION || undefined,
 
@@ -173,8 +173,8 @@ export const initialState = {
   autoSendStreamingSTT: true,
   modelChoicesChat: undefined,
   modelChoiceChat: undefined,
-  modelChoiceTTS: "azure",
-  modelChoiceSTT: "azure",
+  modelChoiceTTS: "11labs",
+  modelChoiceSTT: "whisper",
   textInputValue: "",
 };
 

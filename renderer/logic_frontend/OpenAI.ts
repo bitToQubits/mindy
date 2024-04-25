@@ -4,10 +4,6 @@ import https from "https";
 import { Message, truncateMessages, countTokens } from "./Message";
 import { getModelInfo } from "./Model";
 import axios from "axios";
-import { useChatStore } from "./ChatStore";
-
-const get = useChatStore.getState;
-const set = useChatStore.setState;
 
 export function assertIsError(e: any): asserts e is Error {
   if (!(e instanceof Error)) {
@@ -94,7 +90,7 @@ export async function _streamCompletion(
 }
 
 interface ChatCompletionParams {
-  model: string | "gpt-3.5-turbo-0125";
+  model: string;
   temperature: number;
   top_p: number;
   n: number;
@@ -116,73 +112,6 @@ const paramKeys = [
   "frequency_penalty",
   "logit_bias",
 ];
-
-function generate_image(prompt: string){
-  const payload = JSON.stringify({
-    prompt: prompt,
-    model: "dall-e-3",
-    n: 1,
-    quality: "hd",
-    size: "1024x1024",
-  });
-
-  const req = https.request(
-    {
-      hostname: "api.openai.com",
-      port: 443,
-      path: "/v1/images/generations",
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${get().apiKey}`,
-      },
-    },
-    (res) => {
-      if (res.statusCode !== 200) {
-        let errorBody = "";
-        res.on("end", () => {
-          console.log(res,errorBody)
-        });
-        set((state) => ({
-          topic: "Invalid Image Request",
-        }));
-        set((state) => ({
-          loadingImages: false
-        }));
-        return;
-      }
-      res.on("data", (res) => {
-        set((state) => ({
-          topic: "Image Generation of " + prompt,
-        }));
-        res = JSON.parse(res);
-        if(get().images.length >= 2){
-          set((state) => ({
-            images: []
-          }));
-        }
-        //Push into images array
-        set((state) => ({
-          images: [...state.images, res['data'][0]['url']]
-        }));
-        console.log(get().images)
-
-          set((state) => ({
-            loadingImages: false
-          }));
-      });
-      res.on("end", () => {
-        set((state) => ({
-          apiState: "idle",
-        }));
-      });
-    }
-  );
-
-  req.write(payload);
-
-  req.end();
-}
 
 export async function streamCompletion(
   messages: Message[],
@@ -208,26 +137,6 @@ export async function streamCompletion(
     Object.entries(params).filter(([key]) => paramKeys.includes(key))
   );
 
-  const tools = [
-    {
-      type: "function",
-      function: {
-        name: "generate_image",
-        description: "The image description to generate. Example: a cat on a couch. Infer this from the user prompt.",
-        parameters: {
-          type: "object",
-          properties: {
-            prompt: {
-              type: "string",
-              description: "The description or prompt to generate the image from. Do not use 'default' and is required from user input",
-            },
-          },
-        },
-        required: [""],
-      },
-    },
-  ];
-
   const payload = JSON.stringify({
     messages: submitMessages.map(({ role, content }) => ({ role, content })),
     stream: true,
@@ -237,13 +146,9 @@ export async function streamCompletion(
       // 0 == unlimited
       max_tokens: params.max_tokens || undefined,
     },
-    tools : tools,
-    tool_choice: "auto",
   });
 
   let buffer = "";
-  let sum = "";
-  var functionName: string;
 
   const successCallback = (res: IncomingMessage) => {
     res.on("data", (chunk) => {
@@ -252,76 +157,49 @@ export async function streamCompletion(
         endCallback?.(0, 0);
         return;
       }
+
       // Split response into individual messages
       const allMessages = chunk.toString().split("\n\n");
       for (const message of allMessages) {
         // Remove first 5 characters ("data:") of response
-        var cleaned = message.toString().slice(5);
+        const cleaned = message.toString().trim().slice(5);
 
         if (!cleaned || cleaned === " [DONE]") {
           return;
         }
 
         let parsed;
-        //Replace  “ and ” for " and ' for JSON.parse to work
-        //cleaned = cleaned.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
         try {
           parsed = JSON.parse(cleaned);
         } catch (e) {
-          console.error(cleaned);
+          console.error(e);
           return;
         }
 
         const content = parsed.choices[0]?.delta?.content;
-        const toolCalls = parsed.choices[0]?.delta?.tool_calls;
-        if (toolCalls) {
-            for (const toolCall of toolCalls) {
-              functionName = (toolCall.function.name) ? toolCall.function.name : functionName;
-              sum+=toolCall.function.arguments;
-            }
-        }
-
-        if (content === undefined || content === null) {
+        if (content === undefined) {
           continue;
         }
         buffer += content;
-        
+
         callback?.(content);
       }
     });
 
     res.on("end", () => {
+      const [loadingMessages, loadedMessages] = _.partition(
+        submitMessages,
+        "loading"
+      );
+      const promptTokensUsed = countTokens(
+        loadedMessages.map((m) => m.content).join("\n")
+      );
 
-      if(sum != ""){
+      const completionTokensUsed = countTokens(
+        loadingMessages.map((m) => m.content).join("\n") + buffer
+      );
 
-      const functionArgs = JSON.parse(sum);
-      switch(functionName){
-        case "generate_image":
-          generate_image(functionArgs.prompt);
-          set((state) => ({
-            apiState: "Thinking of a image",
-          }));
-          set((state) => ({
-            loadingImages: true
-          }));
-          break;
-      }
-
-      }
-        const [loadingMessages, loadedMessages] = _.partition(
-          submitMessages,
-          "loading"
-        );
-        const promptTokensUsed = countTokens(
-          loadedMessages.map((m) => m.content).join("\n")
-        );
-  
-        const completionTokensUsed = countTokens(
-          loadingMessages.map((m) => m.content).join("\n") + buffer
-        );
-
-        endCallback?.(promptTokensUsed, completionTokensUsed);
-
+      endCallback?.(promptTokensUsed, completionTokensUsed);
     });
   };
 
@@ -335,11 +213,11 @@ export async function streamCompletion(
 }
 
 export const OPENAI_TTS_VOICES = [
-  "nova",
   "alloy",
   "echo",
   "fable",
   "onyx",
+  "nova",
   "shimmer"
 ] as const;
 

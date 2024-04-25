@@ -5,8 +5,10 @@ import axios from "axios";
 import { assertIsError } from "./OpenAI";
 
 import { useChatStore } from "./ChatStore";
+import { delMessage, pushMessage, setApiState } from "./ChatActions";
 import { submitMessage } from "./SubmitMessage";
-import { GSP_NO_RETURNED_VALUE } from "next/dist/lib/constants";
+
+import OpusMediaRecorder from 'opus-media-recorder';
 
 const get = useChatStore.getState;
 const set = useChatStore.setState;
@@ -19,9 +21,8 @@ export const sendAudioData = async (blob: Blob) => {
     role: "user",
   } as Message;
 
-  set((state) => ({
-    apiState: "loading",
-  }));
+  pushMessage(newMessage);
+  setApiState("loading");
 
   console.log("Sending audio data to OpenAI...", audioChunks.length);
 
@@ -71,12 +72,15 @@ export const startRecording = async () => {
       let options = { mimeType: "audio/webm" };
 
       const workerOptions = {
+        encoderWorkerFactory: function () {
+          // UMD should be used if you don't use a web worker bundler for this.
+          return new Worker('/encoderWorker.umd.js')
+        },
         WebMOpusEncoderWasmPath:
           "https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/WebMOpusEncoder.wasm",
       };
-
+ 
       // @ts-ignore
-
       recorder = new OpusMediaRecorder(
         stream,
         options,
@@ -94,9 +98,6 @@ export const startRecording = async () => {
   }
 
   console.log("Starting recording...", recorder);
-  if (recorder && recorder.state === 'recording') {
-    recorder.stop();
-  }
   recorder.start(1_000);
   set((state) => ({ audioState: "recording" }));
 };
@@ -166,12 +167,11 @@ export const submitAudio = async (newMessage: Message, blob: Blob) => {
 
     // Empty audio, do nothing
     if (response.data.text === "") {
+      setApiState("idle");
+      delMessage(newMessage);
       return;
     }
-
-    set((state) => ({
-      sttText: response.data.text,
-    }));
+    setApiState("idle");
 
     submitMessage({
       id: newMessage.id,
@@ -180,6 +180,7 @@ export const submitAudio = async (newMessage: Message, blob: Blob) => {
     });
   } catch (err) {
     assertIsError(err);
+    setApiState("idle");
     const message = axios.isAxiosError(err)
       ? err.response?.data?.error?.message
       : err.message;

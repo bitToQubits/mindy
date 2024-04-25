@@ -10,7 +10,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from 'fs';
 import { ElevenLabsClient, stream, play  } from "elevenlabs";
 
-const unidecode = require('unidecode');
+const unidecode = require('unidecode'); 
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -32,10 +32,10 @@ if (isProd) {
   })
 
   if (isProd) {
-    await mainWindow.loadURL('app://./home')
+    await mainWindow.loadURL('app://./home');
   } else {
-    const port = process.argv[2]
-    await mainWindow.loadURL(`http://localhost:${port}/home`)
+    const port = process.argv[2];
+    await mainWindow.loadURL(`http://localhost:${port}/home`);
   }
 })()
 
@@ -46,7 +46,7 @@ app.on('window-all-closed', () => {
 const automate_6 = async function (text: string){
   const elevenlabs = new ElevenLabsClient({
     apiKey: "219171ffe1d5a59c4de9d4701090af89" // Defaults to process.env.ELEVENLABS_API_KEY
-  })
+  }) 
   
   const audio = await elevenlabs.generate({
       voice: "mWsaugnzxPXnXHgFS0Iv",
@@ -69,8 +69,8 @@ const automate_6 = async function (text: string){
     }).catch(function (error) {
       console.log("error 67", error)
     return error;
-  });;
-}
+  });
+} 
 
 const automate_5 = async function (busqueda_internet: string){
 
@@ -780,4 +780,4 @@ ipcMain.on('message', async (event, arg) => {
  })
    
   event.reply('message', `Accion completada`);
-})
+}) 

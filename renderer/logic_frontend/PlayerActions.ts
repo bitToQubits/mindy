@@ -1,9 +1,12 @@
+import { genAudio as genAudio11Labs } from "./ElevenLabs";
 
 import { useChatStore } from "./ChatStore";
 import { notifications } from "@mantine/notifications";
 import { genAudio as genAudioOpenAI } from "./OpenAI";
 
-const DEFAULT_OPENAI_VOICE = "nova";
+const DEFAULT_AZURE_VOICE = "en-US-JaneNeural";
+const DEFAULT_11LABS_VOICE = "21m00Tcm4TlvDq8ikWAM";
+const DEFAULT_OPENAI_VOICE = "alloy";
 const DEFAULT_OPENAI_TTS_MODEL = "tts-1";
 
 const get = useChatStore.getState;
@@ -21,29 +24,62 @@ interface VarsShape {
   voiceId: string | undefined;
   voiceStyle?: string | undefined;
   model?: string | undefined;
-  genAudio: typeof genAudioOpenAI;
+  genAudio: typeof genAudio11Labs | typeof genAudioOpenAI;
 }
 
 const getVars = (): VarsShape => {
   const state = get();
 
+  set({ modelChoiceTTS: "11labs" });
+
+  switch (state.modelChoiceTTS) {
+    case '11labs':
+      return {
+        apiKey: state.apiKey11Labs,
+        voiceId: state.settingsForm.voice_id || DEFAULT_11LABS_VOICE,
+        genAudio: genAudio11Labs,
+      };
+    case 'openai':
       return {
         apiKey: state.apiKey,
         voiceId: state.settingsForm.voice_id_openai || DEFAULT_OPENAI_VOICE,
         model: state.settingsForm.tts_model_openai || DEFAULT_OPENAI_TTS_MODEL,
         genAudio: genAudioOpenAI,
       };
+    default:
+      throw new Error('invalid modelChoiceTTS');
+  }
 };
 
 function splitSentences(text: string | undefined) {
   if (!text) return [];
   const sentences = text.match(/[^.!?]+[.!?]/g) || [text];
+  const chunks = [];
 
-  return sentences;
+  // Load the first chunks quickly, expanding as we go on
+  const chunksSizes = [25, 100, 200, 500, 1000];
+
+  let chunk = "";
+  for (const sentence of sentences) {
+    chunk += sentence;
+    const thisChunkSize =
+      chunksSizes[Math.min(chunks.length, chunksSizes.length - 1)];
+    if (chunk.length >= thisChunkSize) {
+      chunks.push(chunk);
+      chunk = "";
+    }
+  }
+
+  if (chunk.length > 0) {
+    chunks.push(chunk);
+  }
+
+  return chunks;
 }
 
 const chunkify = (text: string | undefined) => {
   const sentences = splitSentences(text);
+
   return sentences.map((sentence) => ({
     text: sentence,
     state: "text" as AudioChunk["state"],
@@ -69,12 +105,12 @@ export const initPlayback = () => {
       // Remove the last "unfinished sentence" if we are loading
       chunks.pop();
     }
+
     if (chunks.length > playerAudioQueue.length) {
       const newElems = chunks.splice(playerAudioQueue.length);
-      console.log('New elements:', newElems); // Add logging here
-      if(newElems.length > 0)
-        set({ playerAudioQueue: [...(playerAudioQueue || []), ...newElems] });
+      set({ playerAudioQueue: [...(playerAudioQueue || []), ...newElems] });
     }
+
     const firstIdleChunk = get().playerAudioQueue.findIndex(
       (chunk) => chunk.state === "text"
     );
@@ -109,19 +145,12 @@ export const playAudio = (idx: number) => {
     console.log('player is still playing, skipping playing');
     return;
   }
-  console.log('playing audio', idx, playerAudioQueue.length, playerIdx);
   if (playerIdx + 1 >= playerAudioQueue.length) {
     console.log('next chunk is not queued, skipping playing');
-    set((state) => ({
-      apiState: "ok",
-    }));
     return;
   }
   if (playerAudioQueue[playerIdx + 1].state !== 'audio') {
     console.log('next chunk does not have audio, skipping playing');
-    set((state) => ({
-      apiState: "ok",
-    }));
     return;
   }
   set({
@@ -137,7 +166,7 @@ export const playAudio = (idx: number) => {
 };
 
 const fetchAudio = async (idx: number) => {
-  const { apiKey, voiceId, genAudio, model } = getVars();
+  const { apiKey, apiKeyRegion, voiceId, voiceStyle, genAudio, model } = getVars();
   const { playerAudioQueue } = get();
 
   const chunk = playerAudioQueue[idx];
@@ -151,15 +180,14 @@ const fetchAudio = async (idx: number) => {
 
   set({ playerApiState: "loading" });
 
-  set((state) => ({
-    apiState: "generating voice",
-  }));
   try {
     const audioURL = await genAudio({
       text: chunk.text,
       key: apiKey,
-      voice: 'nova',
+      region: apiKeyRegion,
+      voice: voiceId,
       model,
+      style: voiceStyle,
     });
     if (audioURL) {
       set({
@@ -171,14 +199,8 @@ const fetchAudio = async (idx: number) => {
         playAudio(idx);
       }
     }
-    set((state) => ({
-      apiState: "ok",
-    }));
   } catch (error) {
     console.error(error);
-    set((state) => ({
-      apiState: "error",
-    }));
   }
 
   set({ playerApiState: "idle" });
@@ -194,9 +216,6 @@ const ensureListeners = (audio: HTMLAudioElement) => {
     if (playerIdx + 1 < playerAudioQueue.length) {
       playAudio(playerIdx + 1);
     }
-    set((state) => ({
-      apiState: "ok",
-    }));
   });
 };
 
@@ -205,11 +224,6 @@ export const toggleAudio = () => {
   if (playerState === "playing") {
     if (playerRef.current) {
       playerRef.current.pause();
-      set((state) => ({
-        apiState: "ok",
-      }));
-      set({ ttsText: "" });
-      set({ playerAudioQueue: [] });
     }
     set({ playerState: "paused" });
   } else if (playerState === "paused") {
@@ -221,4 +235,3 @@ export const toggleAudio = () => {
     playAudio(0);
   }
 };
-

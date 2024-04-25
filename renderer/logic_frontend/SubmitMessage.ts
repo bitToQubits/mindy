@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { Message } from "./Message";
 import { streamCompletion } from "./OpenAI";
+import { getChatById, updateChatMessages } from "./utils";
 import { notifications } from "@mantine/notifications";
 import { getModelInfo } from "./Model";
 import { useChatStore } from "./ChatStore";
@@ -23,36 +24,56 @@ export const submitMessage = async (message: Message) => {
     console.error("Message is empty");
     return;
   }
-  let chat = {
-    id: "0",
-    title: undefined,
-    messages: [] as Message[],
-  };
 
-  const assistantMsgId = uuidv4();
+  const activeChatId = get().activeChatId;
+  const chat = get().chats.find((c) => c.id === activeChatId!);
+  if (chat === undefined) {
+    console.error("Chat not found");
+    return;
+  }else{
+    console.log("Chat mensajes: ", chat.messages)
+  }
+  console.log("chat", chat.id);
 
-  chat.messages.push({
-    id: assistantMsgId,
-    content: ` 
-              You are Mindy, an AI assistant created by Mindset. You are created
-              to be helpful and very friendly, you are
-              very kind to the user. You ALWAYS will use emojis. 
-              Mindset is a dominican company 
-              that focuses on creating AI solutions for businesses.
-              Mindset was created on 2021. Mindy was created on 2022.
-              The CEO is Kamila Ureña. The CTO is Jorge Baez. 
-              Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.
-              When user requests an image, you generate a description and then generate the image.    
-            `,
-    role: "system",
-    loading: true,
-  });
-  
+  // If this is an existing message, remove all the messages after it
+  const index = chat.messages.findIndex((m) => m.id === message.id);
+  if (index !== -1) {
+    set((state) => ({
+      chats: state.chats.map((c) => {
+        if (c.id === chat.id) {
+          c.messages = c.messages.slice(0, index);
+        }
+        return c;
+      }),
+    }));
+  }
+
   // Add the message
   set((state) => ({
-    apiState: "loading"
+    apiState: "loading",
+    chats: state.chats.map((c) => {
+      if (c.id === chat.id) {
+        c.messages.push(message);
+      }
+      return c;
+    }),
   }));
-  chat.messages.push(message);
+
+  const assistantMsgId = uuidv4();
+  // Add the assistant's response
+  set((state) => ({
+    chats: state.chats.map((c) => {
+      if (c.id === state.activeChatId) {
+        c.messages.push({
+          id: assistantMsgId,
+          content: "",
+          role: "assistant",
+          loading: true,
+        });
+      }
+      return c;
+    }),
+  }));
 
   const apiKey = get().apiKey;
   if (apiKey === undefined) {
@@ -65,6 +86,15 @@ export const submitMessage = async (message: Message) => {
     const {prompt: promptCost, completion: completionCost} = getModelInfo(activeModel).costPer1kTokens;
     set((state) => ({
       apiState: "idle",
+      chats: state.chats.map((c) => {
+        if (c.id === chat.id) {
+          c.promptTokensUsed = (c.promptTokensUsed || 0) + promptTokensUsed;
+          c.completionTokensUsed = (c.completionTokensUsed || 0) + completionTokensUsed;
+          c.costIncurred =
+            (c.costIncurred || 0) + (promptTokensUsed / 1000) * promptCost + (completionTokensUsed / 1000) * completionCost;
+        }
+        return c;
+      }),
     }));
   };
   const settings = get().settingsForm;
@@ -85,13 +115,34 @@ export const submitMessage = async (message: Message) => {
     (content) => {
       set((state) => ({
         ttsText: (state.ttsText || "") + content,
+        chats: updateChatMessages(state.chats, chat.id, (messages) => {
+          const assistantMessage = messages.find(
+            (m) => m.id === assistantMsgId
+          );
+          if (assistantMessage) {
+            assistantMessage.content += content;
+          }
+          return messages;
+        }),
       }));
     },
     (promptTokensUsed, completionTokensUsed) => {
       set((state) => ({
-        images: []
+        apiState: "idle",
+        chats: updateChatMessages(state.chats, chat.id, (messages) => {
+          const assistantMessage = messages.find(
+            (m) => m.id === assistantMsgId
+          );
+          if (assistantMessage) {
+            assistantMessage.loading = false;
+          }
+          return messages;
+        }),
       }));
-      findChatTitle();
+      updateTokens(promptTokensUsed, completionTokensUsed);
+      if (get().settingsForm.auto_title) {
+        findChatTitle();
+      }
     },
     (errorRes, errorBody) => {
       let message = errorBody;
@@ -109,10 +160,15 @@ export const submitMessage = async (message: Message) => {
   );
 
   const findChatTitle = async () => {
+    const chat = getChatById(get().chats, get().activeChatId);
+    if (chat === undefined) {
+      console.error("Chat not found");
+      return;
+    }
     // Find a good title for the chat
     const numWords = chat.messages
-      .map((m: Message) => m.content.split(" ").length)
-      .reduce((a: number, b: number) => a + b, 0);
+      .map((m) => m.content.split(" ").length)
+      .reduce((a, b) => a + b, 0);
     if (
       chat.messages.length >= 2 &&
       chat.title === undefined &&
@@ -125,20 +181,12 @@ export const submitMessage = async (message: Message) => {
               Hello
               ${chat.messages
                 .slice(1)
-                .map((m: Message) => m.content)
+                .map((m) => m.content)
                 .join("\n")}
               >>>
                 `,
         role: "system",
       } as Message;
-
-      set((state) => ({
-        topic: "",
-      }));
-
-      set((state) => ({
-        apiState: "creating topic name",
-      }));
 
       await streamCompletion(
         [msg, ...chat.messages.slice(1)],
@@ -147,7 +195,18 @@ export const submitMessage = async (message: Message) => {
         undefined,
         (content) => {
           set((state) => ({
-            topic: (state.topic || "") + content,
+            chats: state.chats.map((c) => {
+              if (c.id === chat.id) {
+                // Find message with id
+                chat.title = (chat.title || "") + content;
+                if (chat.title.toLowerCase().startsWith("title:")) {
+                  chat.title = chat.title.slice(6).trim();
+                }
+                // Remove trailing punctuation
+                chat.title = chat.title.replace(/[,.;:!?]$/, "");
+              }
+              return c;
+            }),
           }));
         },
         updateTokens
