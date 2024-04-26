@@ -191,7 +191,7 @@ export default function NavbarSimple() {
               onClick={(event) => {
                 event.preventDefault();
                 deleteChat(chat.id);
-                router.push("/");
+                router.push("/home");
               }}
               style={{
                 position: "absolute",
@@ -266,7 +266,7 @@ export default function NavbarSimple() {
             className={classes.link}
             onClick={(event) => {
               event.preventDefault();
-              router.push("/");
+              router.push("/home");
             }}
           >
             <IconPlus className={classes.linkIcon} stroke={1.5} />
@@ -304,7 +304,7 @@ export default function NavbarSimple() {
             classes={classes}
             clearHandler={() => {
               clearChats();
-              router.push("/");
+              router.push("/home");
             }}
           />
         )}

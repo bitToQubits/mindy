@@ -1,10 +1,6 @@
 .grid
 {
   min-height: 100vh;
-  padding-top: 4rem;
-  padding-bottom: 4rem;
-  padding-left: 2rem;
-  padding-right: 2rem;
 }
 
 .mb_1{
@@ -116,12 +112,12 @@
   align-items: center;
 }
 
-.main {
+/* .main {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-}
+} */
 
 .description {
   display: inherit;
@@ -159,7 +155,6 @@
   animation: ani 2s linear infinite;
 }
 
-
 @keyframes ani {
   from {
       transform: rotate(0deg);
@@ -167,6 +162,27 @@
   to {
       transform: rotate(360deg);
   }
+}
+
+.texto_principal{
+  margin-block-end: -0.33em;
+}
+
+.center_vertically{
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.center_completely{
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
 }
 
 .mindy:after {

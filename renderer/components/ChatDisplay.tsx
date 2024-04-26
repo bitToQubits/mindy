@@ -40,11 +40,9 @@ const ChatDisplay = () => {
 
   var playerState = useChatStore((state) => state.playerState);
 
-  const chats = useChatStore((state) => state.chats);
+  var chats = useChatStore((state) => state.chats);
 
-  const audioState = useChatStore((state) => state.audioState);
-
-  const activeChat = chats.find((chat) => chat.id === activeChatId);
+  var activeChat = chats.find((chat) => chat.id === activeChatId);
 
   const [color, setColor] = useState('white');
 
@@ -66,6 +64,8 @@ const ChatDisplay = () => {
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
   const Recorder = OpusRecorder;
 
+  var audioState = useChatStore((state) => state.audioState);
+
   useEffect(() => {
     if (isScrolledToBottom) {
       scrollToBottom();
@@ -73,6 +73,7 @@ const ChatDisplay = () => {
   }, [isScrolledToBottom, activeChat, lastMessage?.content]);
 
   useEffect(() => {
+    console.log("Ya cargo", audioState)
     const handleScroll = () => {
       setIsScrolledToBottom(scrolledToBottom());
     };
@@ -89,6 +90,8 @@ const ChatDisplay = () => {
         console.log("handlekeydown",audioState)
         if (audioState === "idle") {
           Recorder.startRecording();
+          setText('I am hearing you.');
+          setColor('red');
         } else if (audioState === "transcribing") {
           return;
         }
@@ -101,6 +104,8 @@ const ChatDisplay = () => {
       console.log("handlekeyup",audioState)
       if(event.key == "k"){
         Recorder.stopRecording(true);
+        setText('Your friend, only better.');
+        setColor('white');
       }
     };
 
@@ -119,7 +124,7 @@ const ChatDisplay = () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [audioState]);
 
   // useEffect(() => {
   //   if (isScrolledToBottom) {
@@ -133,8 +138,7 @@ const ChatDisplay = () => {
 
   return (
     <>
-
-      <Container fluid mt="3em" mr="3em" ml="3m">
+      <main className={styles.center_vertically} style={{width: "99%"}}>
         <Grid>
           <Grid.Col span={8}>
             <div className={styles.center}>
@@ -146,12 +150,12 @@ const ChatDisplay = () => {
               </div>
             </div>
             <div className={styles.text_center}>
-              <h1>Mindy</h1>
+              <h1 className={styles.texto_principal}>Mindy</h1>
               <p style={{color: color}}>{text}</p>
             </div>
           </Grid.Col>
           <Grid.Col span={4}>
-            <ScrollArea viewportRef={viewport} h={500} type="auto" offsetScrollbars scrollbarSize={8}>
+            <ScrollArea viewportRef={viewport} w="100%" h={580} type="auto" offsetScrollbars scrollbarSize={8}>
               <Box>
                 {activeChat?.messages.map((message) => (
                 <ChatMessage key={message.id} message={message} />
@@ -160,8 +164,7 @@ const ChatDisplay = () => {
             </ScrollArea>
           </Grid.Col>
         </Grid>
-      </Container>
-      <AudioPlayer />
+      </main>
     </>
   );
 };

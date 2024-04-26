@@ -10,9 +10,12 @@ import { IconDownload } from "@tabler/icons-react";
 import {
   addChat,
   setPlayerMode,
-  setPushToTalkMode,
+  setActiveChatId
 } from "../logic_frontend/ChatActions";
 import { useRouter } from "next/router";
+import {
+  Center
+} from "@mantine/core";
 
 const set = useChatStore.setState;
 
@@ -30,27 +33,26 @@ export default function Page(){
   var topic = useChatStore((state) => state.topic);
   var apiState = useChatStore((state) => state.apiState);
   
-  const audioState = useChatStore((state) => state.audioState);
+  var audioState = useChatStore((state) => state.audioState);
 
-  const editingMessage = useChatStore((state) => state.editingMessage);
+  var editingMessage = useChatStore((state) => state.editingMessage);
 
-  const pushToTalkMode = useChatStore((state) => state.pushToTalkMode);
+  var pushToTalkMode = useChatStore((state) => state.pushToTalkMode);
   
-  const activeChatId = useChatStore((state) => state.activeChatId);
-  const showTextDuringPTT = useChatStore((state) => state.showTextDuringPTT);
-  const showTextInput = !pushToTalkMode || showTextDuringPTT || editingMessage;
+  var activeChatId = useChatStore((state) => state.activeChatId);
+  var showTextDuringPTT = useChatStore((state) => state.showTextDuringPTT);
+  var showTextInput = !pushToTalkMode || showTextDuringPTT || editingMessage;
 
-  const modelChoiceSTT = useChatStore((state) => state.modelChoiceSTT);
-  const Recorder = OpusRecorder;
+  var modelChoiceSTT = useChatStore((state) => state.modelChoiceSTT);
+  var Recorder = OpusRecorder;
 
-  function pausar() {
-    if(playerState == "playing"){
-      toggleAudio();
-    }
-  }
+  useEffect(() => {
+    setActiveChatId(undefined);
+  }, [activeChatId]);
   
   useEffect(() => {
     
+
     //Wait till NextJS rehydration completes
     setIsHydrated(true);
     toggleAudio();
@@ -71,6 +73,8 @@ export default function Page(){
         setPlayerMode(false);
         if (audioState === "idle") {
           Recorder.startRecording();
+          setText('I am hearing you.');
+          setColor('red');
         } else if (audioState === "transcribing") {
           return;
         }
@@ -81,10 +85,10 @@ export default function Page(){
     
     const handleKeyUp = (event) => {
       if(event.key == "k"){
-        if (!activeChatId) {
-          addChat(router);
-        }
+        addChat(router);
         Recorder.stopRecording(true);
+        setText('Your friend, only better.');
+        setColor('white');
       }
     };
 
@@ -111,7 +115,7 @@ export default function Page(){
   // }
 
   return (
-    <main className={`${styles.fondo_oscuro} ${styles.grid}`}>
+    <main>
       {/* <section className={styles.visualization}>
         <div className={styles.inline}>
           <h2 className={styles.contenido_titulo}>Visualization</h2>
@@ -138,17 +142,17 @@ export default function Page(){
           }</p>
         </div>
       </section> */}
-      <section className={styles.main}>
-        <div className={styles.center}>
+      <section className={styles.center_completely}>
+        <div>
           <div className={styles.mindy} style={{animationPlayState: (playerState == "playing" || status_images) ? 'running' : 'paused'}}>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
         </div>
         <div className={styles.text_center}>
-          <h1>Mindy</h1>
+          <h1 className={styles.texto_principal}>Mindy</h1>
           <p style={{color: color}}>{text}</p>
         </div>
       </section>
@@ -175,7 +179,6 @@ export default function Page(){
             <p>Press C to change to text mode</p>
         </div>
       </section> */}
-      <AudioPlayer />
     </main>
   );
 }

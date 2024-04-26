@@ -1,12 +1,118 @@
-//_app.tsx
-import Layout from "../layout";
-import "../css/globals.css";
-import type { AppProps } from "next/app";
+import { AppProps } from "next/app";
+import Head from "next/head";
+import {
+  AppShell,
+  ColorScheme,
+  ColorSchemeProvider,
+  MantineProvider,
+} from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
+import "highlight.js/styles/stackoverflow-dark.css";
 
-export default function MyApp({ Component, pageProps }: AppProps) {
+import { useChatStore } from "../logic_frontend/ChatStore";
+
+import Nav from "../components/Nav";
+import { useEffect, useState } from "react";
+import { setColorScheme } from "../logic_frontend/ChatActions";
+import AudioPlayer from "../components/AudioPlayer";
+
+export default function App(props: AppProps) {
+  const { Component, pageProps } = props;
+
+  const colorScheme = "dark";
+
+  const toggleColorScheme = (value?: ColorScheme) => {
+    const nextColorScheme =
+      value || (colorScheme === "dark" ? "light" : "dark");
+    setColorScheme(nextColorScheme);
+  };
+
+  const apiKey = useChatStore((state) => state.apiKey);
+  const playerMode = useChatStore((state) => state.playerMode);
+
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  //Wait till NextJS rehydration completes
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  if (!isHydrated) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <Layout>
-      <Component {...pageProps} />
-    </Layout>
+    <>
+      <Head>
+        <title>Mindy</title>
+        <meta name="description" content="A new AI model, capable of text,voice, image and actions" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <ColorSchemeProvider
+        colorScheme={colorScheme}
+        toggleColorScheme={toggleColorScheme}
+      >
+        <MantineProvider
+          withGlobalStyles
+          withNormalizeCSS
+          theme={{
+            /** Put your mantine theme override here */
+            colorScheme,
+            primaryColor: "bluu",
+            colors: {
+              // https://smart-swatch.netlify.app/#5E6AD2
+              bluu: [
+                "#e8edff",
+                "#c2c8f3",
+                "#9aa3e5",
+                "#727ed9",
+                "#4c59cd",
+                "#3240b3",
+                "#26318d",
+                "#1a2366",
+                "#0e1540",
+                "#04061b",
+              ],
+              // https://smart-swatch.netlify.app/#2A2D3D
+              dark: [
+                "#eef1fd",
+                "#d1d4e3",
+                "#b3b7cb",
+                "#959ab5",
+                "black",
+                "black",
+                "black",
+                "black",
+                "black",
+                "black",
+              ],
+            },
+          }}
+        >
+          <Notifications />
+          <AppShell
+            padding={0}
+            navbar={<Nav />}
+            layout="alt"
+            navbarOffsetBreakpoint="sm"
+            asideOffsetBreakpoint="sm"
+            styles={(theme) => ({
+              main: {
+                backgroundColor:
+                  theme.colorScheme === "dark"
+                    ? theme.colors.dark[8]
+                    : theme.colors.gray[0],
+              },
+            })}
+          >
+            <div style={{ position: "relative", height: "100%" }}>
+              <Component {...pageProps} />
+            </div>
+            {playerMode && <AudioPlayer />}
+          </AppShell>
+        </MantineProvider>
+      </ColorSchemeProvider>
+    </>
   );
 }
