@@ -258,6 +258,8 @@ export default function NavbarSimple() {
       hidden={!navOpened}
       width={{ sm: 200, lg: 250 }}
       sx={{ zIndex: 1001 }}
+      style={{ backgroundColor: "transparent"}}
+      id="navbarChat"
     >
       <MediaQuery smallerThan="sm" styles={{ display: "none" }}>
         <Navbar.Section className={classes.header}>

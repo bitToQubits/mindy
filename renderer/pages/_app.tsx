@@ -37,10 +37,6 @@ export default function App(props: AppProps) {
     setIsHydrated(true);
   }, []);
 
-  if (!isHydrated) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <>
       <Head>
@@ -109,7 +105,6 @@ export default function App(props: AppProps) {
             <div style={{ position: "relative", height: "100%" }}>
               <Component {...pageProps} />
             </div>
-            {playerMode && <AudioPlayer />}
           </AppShell>
         </MantineProvider>
       </ColorSchemeProvider>

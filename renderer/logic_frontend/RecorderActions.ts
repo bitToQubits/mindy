@@ -81,7 +81,7 @@ export const startRecording = async () => {
           return new Worker('/encoderWorker.umd.js')
         },
         WebMOpusEncoderWasmPath:
-          "https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/WebMOpusEncoder.wasm",
+          "/WebMOpusEncoder.wasm",
       };
  
       // @ts-ignore

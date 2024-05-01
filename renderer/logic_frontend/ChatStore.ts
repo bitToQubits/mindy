@@ -130,6 +130,7 @@ export interface ChatState {
   autoSendStreamingSTT: boolean;
   modelChoicesChat: string[] | undefined;
   modelChoiceTTS: string | "11labs";
+  // modelChoiceTTS: string | "openai";
   modelChoiceSTT: string | "whisper";
   textInputValue: string;
 }
@@ -174,6 +175,7 @@ export const initialState = {
   modelChoicesChat: undefined,
   modelChoiceChat: undefined,
   modelChoiceTTS: "11labs",
+  // modelChoiceTTS: "openai",
   modelChoiceSTT: "whisper",
   textInputValue: "",
 };

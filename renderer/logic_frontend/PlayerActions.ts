@@ -30,6 +30,7 @@ interface VarsShape {
 const getVars = (): VarsShape => {
   const state = get();
 
+  // set({ modelChoiceTTS: "openai" });
   set({ modelChoiceTTS: "11labs" });
 
   switch (state.modelChoiceTTS) {

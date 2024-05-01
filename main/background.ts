@@ -371,10 +371,10 @@ const automate_3 = async function (tema: string, plantilla: string = ""){
       await titulo.fill(tema)
     }else{
       const terminos_a_remplazar_plantilla = {
-        "Nombres:" : "Jorge Luis Báez",
+        "Nombres:" : "Jorge Luis Báez y Josue Acosta",
         "Curso:" : "5to Informática",
         "Materia:" : "-",
-        "Profesor@:" : "Elison Perez",
+        "Profesor@:" : "Elison Perez, Austria Mota, Xiomara Rivas",
         "Colegio:" : "Colegio Preuniversitario Pedro Henriquez Ureña",
         "Año escolar:" : "2023-2024",
         "Tema:" : tema
@@ -409,7 +409,7 @@ const automate_3 = async function (tema: string, plantilla: string = ""){
       await text_input.focus();
     }
 
-    await text_input.pressSequentially("# "+tema);
+    await text_input.pressSequentially(unidecode("# "+tema));
     await page.keyboard.press("Enter");
     await page.keyboard.press("Enter");
 
@@ -430,7 +430,7 @@ const automate_3 = async function (tema: string, plantilla: string = ""){
     model = genAI.getGenerativeModel({ model: "gemini-pro"});
 
     for (let subtema of division_temas){
-      await text_input.pressSequentially("## " + subtema);
+      await text_input.pressSequentially(unidecode("## " + subtema));
       await page.keyboard.press("Enter");
       await generar_contenido(subtema, "").then(function () {
         console.log("Exito")
@@ -773,11 +773,21 @@ const automate = async function (){
 
 ipcMain.on('message', async (event, arg) => {
 
-  automate_6("Hola soy elison perez").then(() => {
+  let prompt = `
+      Realiza un documento que hable sobre el siguiente tema, desde la perspectiva de una banca de loteria
+      que es una microempresa, llamada "Lotenal".
+
+      ⦁	Investigación Inicial:
+        ⦁	Realizar una investigación sobre las necesidades específicas de esa microempresa en términos de presencia en línea.
+        ⦁	Identificar las características clave que el sitio web debe incluir (por ejemplo, catálogo de productos, horarios de atención, formularios de contacto).
+
+  `
+ 
+  automate_3(prompt, "escuela").then(() => {
     
  }).catch((e) => {
     console.log('258 handle error here: ', e.message)
  })
    
   event.reply('message', `Accion completada`);
-})  
+})
