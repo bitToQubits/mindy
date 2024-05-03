@@ -110,7 +110,6 @@ export interface ChatState {
   submitNextAudio: boolean;
   audioState: AudioState;
   audioChunks: BlobPart[];
-  playerMode: boolean;
   editingMessage: Message | undefined;
 
   ttsID: string | undefined;
@@ -129,8 +128,8 @@ export interface ChatState {
   showTextDuringPTT: boolean;
   autoSendStreamingSTT: boolean;
   modelChoicesChat: string[] | undefined;
-  modelChoiceTTS: string | "11labs";
-  // modelChoiceTTS: string | "openai";
+  // modelChoiceTTS: string | "11labs";
+  modelChoiceTTS: string | "openai";
   modelChoiceSTT: string | "whisper";
   textInputValue: string;
 }
@@ -148,7 +147,6 @@ export const initialState = {
   settingsForm: defaultSettings,
   defaultSettings: defaultSettings,
   navOpened: false,
-  playerMode: false,
   pushToTalkMode: false,
   editingMessage: undefined,
 
@@ -174,8 +172,8 @@ export const initialState = {
   autoSendStreamingSTT: true,
   modelChoicesChat: undefined,
   modelChoiceChat: undefined,
-  modelChoiceTTS: "11labs",
-  // modelChoiceTTS: "openai",
+  // modelChoiceTTS: "11labs",
+  modelChoiceTTS: "openai",
   modelChoiceSTT: "whisper",
   textInputValue: "",
 };

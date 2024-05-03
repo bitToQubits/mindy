@@ -2,14 +2,11 @@
 import { useEffect, useState } from "react";
 import styles from '../css/page.module.css';
 import * as OpusRecorder from '../logic_frontend/RecorderActions';
-import AudioPlayer from "../components/AudioPlayer";
 import { useChatStore } from "../logic_frontend/ChatStore";
 //import { AppProps } from "next/app";
 import { toggleAudio } from "../logic_frontend/PlayerActions";
 import {
   addChat,
-  setPlayerMode,
-  setActiveChatId
 } from "../logic_frontend/ChatActions";
 import { useRouter } from "next/router";
 
@@ -19,32 +16,15 @@ import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass';
 
-const set = useChatStore.setState;
-
 export default function Page(){
   const router = useRouter();
   const [isHydrated, setIsHydrated] = useState(false);
   const [text, setText] = useState('Your friend, only better.');
   const [color, setColor] = useState('white');
-  const [message, setMessage] = useState('No message found')
-  var ttsText = useChatStore((state) => state.ttsText);
   var images = useChatStore((state) => state.images);
-  var playerState = useChatStore((state) => state.playerState);
-  var status_images = useChatStore((state) => state.loadingImages);
-  var sttText = useChatStore((state) => state.sttText);
-  var topic = useChatStore((state) => state.topic);
-  var apiState = useChatStore((state) => state.apiState);
   
   var audioState = useChatStore((state) => state.audioState);
 
-  var editingMessage = useChatStore((state) => state.editingMessage);
-
-  var pushToTalkMode = useChatStore((state) => state.pushToTalkMode);
-  
-  var showTextDuringPTT = useChatStore((state) => state.showTextDuringPTT);
-  var showTextInput = !pushToTalkMode || showTextDuringPTT || editingMessage;
-
-  var modelChoiceSTT = useChatStore((state) => state.modelChoiceSTT);
   var Recorder = OpusRecorder;
   
   useEffect(() => {
@@ -62,10 +42,6 @@ export default function Page(){
     setIsHydrated(true);
 
     toggleAudio();
-    
-    window.ipc.on('message', (message: string) => {
-      setMessage(message)
-    })
 
     const handleKeyDown = (event) => {
       if(!["k", "l"].includes(event.key)){
@@ -75,7 +51,6 @@ export default function Page(){
         return;
       }
       if(event.key == "k"){
-        setPlayerMode(true);
         if (audioState === "idle") {
           Recorder.startRecording();
           setText('I am hearing you.');
@@ -118,7 +93,6 @@ export default function Page(){
     var mouseY;
     var scene;
     var clock;
-    var analyser;
     var bloomComposer;
     var mesh;
     var bloomPass;
@@ -170,7 +144,7 @@ export default function Page(){
         green: 0,
         blue: 0,
         threshold: 0.27,
-        strength: 0.5,
+        strength: 0.1,
         radius: 0.2
       }
 
@@ -351,7 +325,7 @@ export default function Page(){
         <div id="pechurina">
 
         </div>
-        <div className={styles.text_center} id="mindyText">
+        <div className={`${styles.text_center} ${styles.margen_negativo}`} id="mindyText">
           <h1 className={styles.texto_principal}>Mindy</h1>
           <p style={{color: color}}>{text}</p>
         </div>

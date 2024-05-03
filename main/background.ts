@@ -8,7 +8,7 @@ import axios from 'axios';
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from 'fs';
-import { ElevenLabsClient, stream, play  } from "elevenlabs";
+import { ElevenLabsClient, play  } from "elevenlabs";
 
 const unidecode = require('unidecode'); 
 
@@ -790,4 +790,4 @@ ipcMain.on('message', async (event, arg) => {
  })
    
   event.reply('message', `Accion completada`);
-})
+}) 

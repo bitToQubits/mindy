@@ -123,10 +123,6 @@ export const setNavOpened = (navOpened: boolean) =>
 export const setPushToTalkMode = (pushToTalkMode: boolean) =>
   set((state) => ({ pushToTalkMode }));
 
-export const setPlayerMode = (playerMode: boolean) => {
-  set((state) => ({ playerMode }));
-};
-
 export const setEditingMessage = (editingMessage: Message | undefined) =>
   set((state) => ({ editingMessage }));
 

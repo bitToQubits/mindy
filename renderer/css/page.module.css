@@ -282,6 +282,16 @@
   z-index: -1;
 }
 
+.contenedorGrafico{
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+.margen_negativo{
+  margin-top: -5em;
+}
+
 .visible{
   display: block;
 }

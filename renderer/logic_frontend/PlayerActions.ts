@@ -30,8 +30,8 @@ interface VarsShape {
 const getVars = (): VarsShape => {
   const state = get();
 
-  // set({ modelChoiceTTS: "openai" });
-  set({ modelChoiceTTS: "11labs" });
+  set({ modelChoiceTTS: "openai" });
+  // set({ modelChoiceTTS: "11labs" });
 
   switch (state.modelChoiceTTS) {
     case '11labs':
@@ -102,6 +102,7 @@ export const initPlayback = () => {
   const checker = async () => {
     const { apiState, ttsText, playerApiState, playerAudioQueue } = get();
     const chunks = chunkify(ttsText);
+
     if (apiState === "loading") {
       // Remove the last "unfinished sentence" if we are loading
       chunks.pop();
@@ -109,6 +110,7 @@ export const initPlayback = () => {
 
     if (chunks.length > playerAudioQueue.length) {
       const newElems = chunks.splice(playerAudioQueue.length);
+      //bobo 113
       set({ playerAudioQueue: [...(playerAudioQueue || []), ...newElems] });
     }
 
@@ -116,8 +118,11 @@ export const initPlayback = () => {
       (chunk) => chunk.state === "text"
     );
 
+    console.log("firstIdleChunk: ", firstIdleChunk, playerAudioQueue[firstIdleChunk]);
+
     if (firstIdleChunk !== -1 && playerApiState === "idle") {
       // We need to get more audio
+      console.log("broooo", firstIdleChunk)
       await fetchAudio(firstIdleChunk);
     }
   };
@@ -146,23 +151,33 @@ export const playAudio = (idx: number) => {
     console.log('player is still playing, skipping playing');
     return;
   }
-  if (playerIdx + 1 >= playerAudioQueue.length) {
+  if (idx >= playerAudioQueue.length) {
     console.log('next chunk is not queued, skipping playing');
     return;
   }
-  if (playerAudioQueue[playerIdx + 1].state !== 'audio') {
+  if (playerAudioQueue[idx].state !== 'audio') {
     console.log('next chunk does not have audio, skipping playing');
     return;
   }
-  set({
-    playerIdx: playerIdx + 1,
-    playerState: "playing",
-  });
+  
+  console.log("Se llego a playAudio")
   if (playerRef.current) {
-    playerRef.current.src = playerAudioQueue[playerIdx + 1].blobURL;
+    playerRef.current.src = playerAudioQueue[idx].blobURL;
+    console.log("Coperas con los federicos")
     ensureListeners(playerRef.current);
 
-    playerRef.current.play();
+    const playPromise = playerRef.current.play();
+
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        set({
+          playerIdx: idx,
+          playerState: "playing",
+        });
+      }).catch(error => {
+        console.log("error!", error)
+      });
+    }
   }
 };
 
@@ -196,6 +211,7 @@ const fetchAudio = async (idx: number) => {
           i === idx ? { ...chunk, blobURL: audioURL, state: "audio" } : chunk
         ),
       });
+      console.log("Donde deberia ser idle: ", get().playerState);
       if (get().playerState === "idle") {
         playAudio(idx);
       }
@@ -208,16 +224,21 @@ const fetchAudio = async (idx: number) => {
 };
 
 const ensureListeners = (audio: HTMLAudioElement) => {
-  if (get().playerRefInit) return;
-  set({ playerRefInit: true });
+  // if (get().playerRefInit) return;
+  // set({ playerRefInit: true });
 
-  audio.addEventListener("ended", () => {
+  function asegurarElSiguienteAudio(){
     const { playerIdx, playerAudioQueue } = get();
     set({ playerState: "idle" });
     if (playerIdx + 1 < playerAudioQueue.length) {
+      console.log("playerIdx + 1", playerIdx + 1)
       playAudio(playerIdx + 1);
     }
-  });
+  }
+
+  console.log("Se llego a establecer audio event listener");
+
+  audio.addEventListener("ended", asegurarElSiguienteAudio);
 };
 
 export const toggleAudio = () => {
@@ -232,7 +253,7 @@ export const toggleAudio = () => {
       playerRef.current.play();
     }
     set({ playerState: "playing" });
-  } else if (playerState === "idle") {
-    playAudio(0);
+  // } else if (playerState === "idle") {
+  //   playAudio(0);
   }
 };

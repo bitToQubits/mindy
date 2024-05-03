@@ -9,12 +9,8 @@ import {
 import { Notifications } from "@mantine/notifications";
 import "highlight.js/styles/stackoverflow-dark.css";
 
-import { useChatStore } from "../logic_frontend/ChatStore";
-
 import Nav from "../components/Nav";
-import { useEffect, useState } from "react";
 import { setColorScheme } from "../logic_frontend/ChatActions";
-import AudioPlayer from "../components/AudioPlayer";
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props;
@@ -26,16 +22,6 @@ export default function App(props: AppProps) {
       value || (colorScheme === "dark" ? "light" : "dark");
     setColorScheme(nextColorScheme);
   };
-
-  const apiKey = useChatStore((state) => state.apiKey);
-  const playerMode = useChatStore((state) => state.playerMode);
-
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  //Wait till NextJS rehydration completes
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   return (
     <>

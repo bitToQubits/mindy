@@ -3,16 +3,13 @@ import {
   ScrollArea,
   Grid,
   Box,
-  Container,
-  Center
 } from "@mantine/core";
 import { useChatStore } from "../logic_frontend/ChatStore";
 
 import ChatMessage from "./ChatMessage";
 import * as OpusRecorder from '../logic_frontend/RecorderActions';
 import { useRouter } from "next/router";
-import { setActiveChatId,
-          setPlayerMode
+import { setActiveChatId
         } from "../logic_frontend/ChatActions";
 import styles from '../css/page.module.css';
 import * as THREE from 'three';
@@ -44,7 +41,6 @@ const ChatDisplay = () => {
   }, [activeChatId]);
 
   const [text, setText] = useState('Your friend, only better.');
-  const playerMode = useChatStore((state) => state.playerMode);
 
   const viewport = useRef<HTMLDivElement>(null);
 
@@ -102,7 +98,6 @@ const ChatDisplay = () => {
         return;
       }
       if(event.key == "k"){
-        setPlayerMode(true);
         console.log("handlekeydown",audioState)
         if (audioState === "idle") {
           Recorder.startRecording();
@@ -211,7 +206,7 @@ const ChatDisplay = () => {
         green: 0,
         blue: 0,
         threshold: 0.27,
-        strength: 0.5,
+        strength: 0.1,
         radius: 0.2
       }
 
@@ -428,7 +423,7 @@ const ChatDisplay = () => {
           </Grid.Col>
         </Grid>
       </main>
-      {playerMode && <AudioPlayer />}
+      {<AudioPlayer />}
     </>
   );
 };
