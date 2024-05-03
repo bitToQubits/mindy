@@ -147,7 +147,7 @@ export default function NavbarSimple() {
 
   const [editedTitle, setEditedTitle] = useState("");
 
-  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const { colorScheme } = useMantineColorScheme();
   const Icon = colorScheme === "dark" ? IconSun : IconMoon;
 
   const isSmall = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
@@ -301,6 +301,18 @@ export default function NavbarSimple() {
         </Navbar.Section>
       </MediaQuery>
       <Navbar.Section className={classes.footer}>
+        <a href="#" className={classes.link} onClick={
+          (event) => {
+            event.preventDefault();
+            router.push("/topicosClasificacion");
+          }
+        }>
+          <>
+              {/* <IconCheck className={classes.linkIcon} stroke={1.5} /> */}
+              <span>Mind Module</span>
+          </>
+        </a>
+
         {links?.length > 0 && (
           <ClearChatsButton
             classes={classes}

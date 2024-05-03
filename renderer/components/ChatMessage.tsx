@@ -8,11 +8,8 @@ import {
   px,
 } from "@mantine/core";
 
-import { useChatStore } from "../logic_frontend/ChatStore";
 import { IconEdit, IconRepeat, IconSettings, IconX } from "@tabler/icons-react";
 import MessageDisplay from "./MessageDisplay";
-
-import Image from "next/image";
 
 import { Message } from "../logic_frontend/Message";
 import {
@@ -131,8 +128,6 @@ const useStyles = createStyles((theme: MantineTheme) => ({
 
 export default function ChatDisplay({ message }: { message: Message }) {
   const { classes, cx } = useStyles();
-
-  const pushToTalkMode = useChatStore((state) => state.pushToTalkMode);
 
   const handleMainAction = (message: Message) => {
     if (message.role === "assistant") {

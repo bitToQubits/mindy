@@ -47,18 +47,12 @@ const ChatDisplay = () => {
   const scrollToBottom = () =>
     viewport.current!?.scrollTo({ top: viewport.current!.scrollHeight, behavior: 'smooth' });
 
-  var status_images = useChatStore((state) => state.loadingImages);
-  var images = useChatStore((state) => state.images);
-
-  var playerState = useChatStore((state) => state.playerState);
-
   var chats = useChatStore((state) => state.chats);
 
   var activeChat = chats.find((chat) => chat.id === activeChatId);
 
   const [color, setColor] = useState('white');
 
-  const pushToTalkMode = useChatStore((state) => state.pushToTalkMode);
   const lastMessage = activeChat?.messages[activeChat.messages.length - 1];
 
   const scrolledToBottom = () => {
@@ -120,14 +114,12 @@ const ChatDisplay = () => {
       }
     };
 
-    console.log(images.length);
 
     // Add event listener
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener("scroll", handleScroll);
 
-    console.log(images.length)
     // Cleanup function to remove the event listener when the component unmounts
     
     return () => {

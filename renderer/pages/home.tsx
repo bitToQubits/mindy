@@ -21,7 +21,6 @@ export default function Page(){
   const [isHydrated, setIsHydrated] = useState(false);
   const [text, setText] = useState('Your friend, only better.');
   const [color, setColor] = useState('white');
-  var images = useChatStore((state) => state.images);
   
   var audioState = useChatStore((state) => state.audioState);
 
@@ -71,8 +70,6 @@ export default function Page(){
         setColor('white');
       }
     };
-
-    console.log(images.length);
 
     // Add event listener
     window.addEventListener('keydown', handleKeyDown);

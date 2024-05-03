@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { Message } from "./Message";
 import { persist } from "zustand/middleware";
 import { Chat } from "./Chat";
+import { Classifier } from "./Classifier";
 import type { AudioChunk } from "./PlayerActions";
 
 export type APIState = "idle" | "loading" | "error" | "ok" | "creating topic name" | "generating voice" | "Thinking of a image";
@@ -89,14 +90,16 @@ export const defaultSettings = {
   submit_debounce_ms: 0,
 };
 
+
 export interface ChatState {
   apiState: APIState;
   apiKey: string | "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";
   apiKey11Labs: string | undefined;
   apiKeyAzure: string | undefined;
   apiKeyAzureRegion: string | undefined;
-
+  
   chats: Chat[];
+  classifiers: Classifier[];
   activeChatId: string | undefined;
   colorScheme: "light" | "dark";
   currentAbortController: AbortController | undefined;
@@ -141,6 +144,7 @@ export const initialState = {
   apiKeyAzureRegion: process.env.NEXT_PUBLIC_AZURE_REGION || undefined,
 
   chats: [],
+  classifiers: [],
   activeChatId: undefined,
   colorScheme: "light" as "light" | "dark",
   currentAbortController: undefined,
