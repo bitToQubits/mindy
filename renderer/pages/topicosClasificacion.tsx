@@ -1,35 +1,40 @@
 'use client';
 import TopicCard from "../components/TopicCard";
-import { Grid } from '@mantine/core';
+import { Grid, Button } from '@mantine/core';
+import { IconTrash } from '@tabler/icons-react';
 import { useChatStore } from "../logic_frontend/ChatStore";
 
 export default function Page(){
 
-    var classifiers = [];
+    const classifiers = useChatStore(state => state.classifiers);
 
-    classifiers.push(
-        {
-            id: "1",
-            title: "Chakira",
-            createdAt: new Date(),
-            image : "https://images.unsplash.com/photo-1437719417032-8595fd9e9dc6?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=600&q=80",
-            num_chats: 10
-        }
-    )
+    function eliminarTodosLosTopicos(){
+        useChatStore.setState({ classifiers: [] });
+    }
 
     return (
-        <main style={{marginTop: "1em", width: "99%"}}>
+        <main style={{width: "99%", marginTop: "1rem"}}>
             <Grid>
             {
-
+            classifiers?.length > 0 && <Grid.Col span={12}>
+                <Button
+                    variant="light"
+                    color="red"
+                    onClick={() => eliminarTodosLosTopicos()}
+                >
+                    <IconTrash size={14} />
+                    <span style={{ marginLeft: '10px' }}>Remove all topics</span>
+                </Button>
+            </Grid.Col>
+            }
+            {
                 classifiers?.map((classifier) => (
                     <Grid.Col span={4} key={classifier.id}>
                         <TopicCard 
-                            classifier={classifier}                         
+                            classifier={classifier}
                         />
                     </Grid.Col>
                 ))
-            
             }
             </Grid>
         </main>

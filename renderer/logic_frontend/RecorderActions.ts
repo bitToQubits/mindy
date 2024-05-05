@@ -19,6 +19,7 @@ export const sendAudioData = async (blob: Blob) => {
     id: uuidv4(),
     content: "",
     role: "user",
+    type: "text"
   } as Message;
 
   pushMessage(newMessage);
@@ -41,16 +42,13 @@ export const startRecording = async () => {
   };
 
   const onRecordingStop = () => {
-    console.log("Errorrrrr")
     const submitNextAudio = get().submitNextAudio;
     console.log("stop, submit=", submitNextAudio);
     const cleanup = () => {
-      console.log("Entraa 48")
       set((state) => ({
         audioState: "idle",
         audioChunks: [],
       }));
-      console.log(get().audioState)
       set((state) => ({
         recorderTimeout: setTimeout(() => {
           destroyRecorder();
@@ -59,7 +57,6 @@ export const startRecording = async () => {
     };
 
     if (submitNextAudio) {
-      console.log("Entraaa 61")
       const blob = new Blob(get().audioChunks, { type: "audio/webm" });
 
       sendAudioData(blob).then(cleanup, cleanup);
@@ -101,7 +98,6 @@ export const startRecording = async () => {
     }
   }
 
-  console.log("Starting recording...", recorder);
   recorder.start(1_000);
   set((state) => ({ audioState: "recording" }));
 };
@@ -116,7 +112,6 @@ export const stopRecording = async (submit: boolean) => {
     // Set immediately since the ev handler takes some time
     if (submit) {
       set((state) => ({ audioState: "transcribing" }));
-      console.log("porque diablosss")
     } else {
       set((state) => ({ audioState: "idle" }));
     }
@@ -182,6 +177,7 @@ export const submitAudio = async (newMessage: Message, blob: Blob) => {
       id: newMessage.id,
       content: response.data.text,
       role: "user",
+      type: "text"
     });
   } catch (err) {
     assertIsError(err);

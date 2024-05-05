@@ -15,6 +15,7 @@ import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer';
 import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass';
+import { notifications } from "@mantine/notifications";
 
 export default function Page(){
   const router = useRouter();
@@ -58,7 +59,29 @@ export default function Page(){
           return;
         }
       }else{
-        window.ipc.send('message', 'Hello')
+        notifications.show({
+          title: "Action started",
+          message: "Generating images",
+          color: "red",
+        });
+        window.ipc.send('generacion_imagenes', "a cute little dog");
+        window.ipc.on('generacion_imagenes', (images: string[]) => {
+
+          if(images.length == 0){
+            notifications.show({
+              title: "Error",
+              message: "No images generated",
+              color: "gray",
+            });
+            return;
+          }
+
+          notifications.show({
+            title: "Action finished",
+            message: "Images generated successfully",
+            color: "green",
+          });
+        });
       }
     };
     
@@ -79,26 +102,55 @@ export default function Page(){
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('resize', recalculo_esferico);
+      document.removeEventListener('mousemove', movimiento_mouse);
+      mesh?.geometry.dispose();
+      mesh?.material.dispose();
+      scene?.remove(mesh);
+      renderer?.dispose();
+      renderer = null;
+      scene = null;
+      camera = null;
+      clock = null;
+      bloomComposer = null;
+      scene = null;
+      cancelAnimationFrame(requestID);
     };
   }, []); // Empty dependency array means this effect runs once on mount
 
+  var camera;
+  var uniforms;
+  var mouseX;
+  var mouseY;
+  var scene;
+  var clock;
+  var bloomComposer;
+  var mesh;
+  var bloomPass;
+  var tamanoMindyText;
+  var tamanoNavbar;
+  var renderer;
+  var requestID;
+
+  function movimiento_mouse(e){
+    let windowHalfX = window.innerWidth / 2;
+    let windowHalfY = window.innerHeight / 2;
+    mouseX = (e.clientX - windowHalfX) / 100;
+    mouseY = (e.clientY - windowHalfY) / 100;
+  }
+
+  function recalculo_esferico(){
+    camera.aspect = (window.innerWidth - tamanoNavbar) / (window.innerHeight - tamanoMindyText);
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth - tamanoNavbar, window.innerHeight - tamanoMindyText);
+    bloomComposer.setSize(window.innerWidth - tamanoNavbar, window.innerHeight - tamanoMindyText);
+  }
+
   useEffect(() => {
 
-    var camera;
-    var uniforms;
-    var mouseX;
-    var mouseY;
-    var scene;
-    var clock;
-    var bloomComposer;
-    var mesh;
-    var bloomPass;
-    var tamanoMindyText;
-    var tamanoNavbar;
-    var renderer;
 
     function animate() {
-      requestAnimationFrame(animate);
+      requestID = requestAnimationFrame(animate);
       camera.position.x += (mouseX - camera.position.x) * .05;
       camera.position.y += (-mouseY - camera.position.y) * 0.5;
       camera.lookAt(scene.position);
@@ -107,19 +159,6 @@ export default function Page(){
       bloomComposer.render();
     }
 
-    function movimiento_mouse(e){
-      let windowHalfX = window.innerWidth / 2;
-      let windowHalfY = window.innerHeight / 2;
-      mouseX = (e.clientX - windowHalfX) / 100;
-      mouseY = (e.clientY - windowHalfY) / 100;
-    }
-
-    function recalculo_esferico(){
-      camera.aspect = (window.innerWidth - tamanoNavbar) / (window.innerHeight - tamanoMindyText);
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth - tamanoNavbar, window.innerHeight - tamanoMindyText);
-      bloomComposer.setSize(window.innerWidth - tamanoNavbar, window.innerHeight - tamanoMindyText);
-    }
 
     if(document.getElementById('pechurina') && document.querySelector('#pechurina').innerHTML == ""){ 
       renderer = new THREE.WebGLRenderer({antialias: true});
@@ -310,9 +349,24 @@ export default function Page(){
       window.addEventListener('resize', recalculo_esferico);
     }
 
+    return () => {
+      console.log("Se cerro home.tsx en el animation");
+    } 
+
     // return () => {
     //   window.removeEventListener('resize', recalculo_esferico);
     //   document.removeEventListener('mousemove', movimiento_mouse);
+    //   mesh.geometry.dispose();
+    //   mesh.material.dispose();
+    //   scene.remove(mesh);
+    //   renderer.dispose();
+    //   renderer = null;
+    //   scene = null;
+    //   camera = null;
+    //   clock = null;
+    //   bloomComposer = null;
+    //   scene = null;
+    //   cancelAnimationFrame(requestID);
     // }
   }, [isHydrated]);
 

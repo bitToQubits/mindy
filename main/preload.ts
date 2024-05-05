@@ -9,9 +9,9 @@ const handler = {
       callback(...args)
     ipcRenderer.on(channel, subscription)
 
-    return () => {
-      ipcRenderer.removeListener(channel, subscription)
-    }
+  },
+  off(channel: string) {
+    ipcRenderer.removeAllListeners(channel)
   },
 }
 

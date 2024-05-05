@@ -1,5 +1,4 @@
 import { useChatStore } from "../logic_frontend/ChatStore";
-import { v4 as uuidv4 } from "uuid";
 import {
   ActionIcon,
   Box,
@@ -21,12 +20,9 @@ import { upperFirst, useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconArrowRight,
   IconEdit,
-  IconKey,
-  IconMoon,
   IconPlus,
-  IconSettings,
-  IconSun,
   IconTrash,
+  IconBooks
 } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import ClearChatsButton from "./ClearChatsButton";
@@ -133,12 +129,6 @@ export default function NavbarSimple() {
   const router = useRouter();
   const activeChatId = router.query.chatId as string | undefined;
 
-  const [openedKeyModal, { open: openKeyModal, close: closeKeyModal }] =
-    useDisclosure(false);
-  const [
-    openedSettingsModal,
-    { open: openSettingsModal, close: closeSettingsModal },
-  ] = useDisclosure(false);
   const [openedTitleModal, { open: openTitleModal, close: closeTitleModal }] =
     useDisclosure(false);
 
@@ -147,8 +137,7 @@ export default function NavbarSimple() {
 
   const [editedTitle, setEditedTitle] = useState("");
 
-  const { colorScheme } = useMantineColorScheme();
-  const Icon = colorScheme === "dark" ? IconSun : IconMoon;
+  const classifiers = useChatStore((state) => state.classifiers);
 
   const isSmall = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
@@ -301,17 +290,17 @@ export default function NavbarSimple() {
         </Navbar.Section>
       </MediaQuery>
       <Navbar.Section className={classes.footer}>
-        <a href="#" className={classes.link} onClick={
+        {classifiers?.length > 0 && <a href="#" className={classes.link} onClick={
           (event) => {
             event.preventDefault();
             router.push("/topicosClasificacion");
           }
         }>
           <>
-              {/* <IconCheck className={classes.linkIcon} stroke={1.5} /> */}
+              <IconBooks className={classes.linkIcon} stroke={1.5} />
               <span>Mind Module</span>
           </>
-        </a>
+        </a>}
 
         {links?.length > 0 && (
           <ClearChatsButton

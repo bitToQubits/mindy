@@ -9,6 +9,7 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from 'fs';
 import { ElevenLabsClient, play  } from "elevenlabs";
+import { v4 as uuidv4 } from "uuid";
 
 const unidecode = require('unidecode'); 
 
@@ -36,6 +37,7 @@ if (isProd) {
   } else {
     const port = process.argv[2];
     await mainWindow.loadURL(`http://localhost:${port}/home`);
+    mainWindow.webContents.openDevTools()
   }
 })()
 
@@ -56,18 +58,14 @@ const automate_6 = async function (text: string){
         "similarity_boost": 1
       }
   }).then(function (response) {
-    console.log("error 56: ", response)
     return response;
     }).catch(function (error) {
-      console.log("error 59: ",error)
     return error;
   });;
 
   await play(audio).then(function (response) {
-    console.log("error 64: ", response)
     return response;
     }).catch(function (error) {
-      console.log("error 67", error)
     return error;
   });
 } 
@@ -116,7 +114,6 @@ const automate_4 = async function (instruccion: string, nombre_archivo: string){
 
     files = filesInDir.filter((fileName) => fileName.replaceAll("_","").replaceAll("-","").includes(nombre_archivo.replaceAll("_","").replaceAll("-","")) && (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')));
 
-    console.log(files);
   }
 
   if(files.length == 0){
@@ -202,20 +199,14 @@ const automate_3 = async function (tema: string, plantilla: string = ""){
         let texto = "";
         try{
           texto = chunk.text();
-          console.log("ohoh, 88", texto); 
         }catch{
-          console.log("dada")
           if(response.candidates[0].finish_reason == "RECITATION"){
             await generar_contenido(subtema, response.candidates[0].content.parts.text).then(function () {
-              console.log("excellent 2")
             })
             .catch(function (error) {
-              console.log("Error: " + error)
             });
           }
         }
-
-        console.log(texto)
 
         indices_a_eliminar = [];
 
@@ -291,7 +282,6 @@ const automate_3 = async function (tema: string, plantilla: string = ""){
 
   var division_temas = respuesta_division_tematica_openai.choices[0].message.content.split(",");
 
-  console.log(division_temas)
 
   for(var i = 0; i < division_temas.length; i++){
     if(division_temas[i].trim().startsWith("--")){
@@ -433,16 +423,12 @@ const automate_3 = async function (tema: string, plantilla: string = ""){
       await text_input.pressSequentially(unidecode("## " + subtema));
       await page.keyboard.press("Enter");
       await generar_contenido(subtema, "").then(function () {
-        console.log("Exito")
       })
       .catch(function (error) {
-        console.log("Error: ", error)
       });
     }
 
     page.setDefaultTimeout( 60000 );
-
-    console.log("llega aqui 315")
 
     count = 0;
 
@@ -565,13 +551,10 @@ const automate_2 = async function (termino: string, debe_buscar_imagenes: boolea
         return;
       }
 
-      console.log("79:", img)
-
       var imagen = await axios.get(img, {responseType: 'arraybuffer'}).then(function (response) {
         return response;
       })
       .catch(function (error) {
-        console.log(error)
         return error;
       })
 
@@ -641,7 +624,6 @@ const automate_2 = async function (termino: string, debe_buscar_imagenes: boolea
     }
     if(await contenidos_elementos.nth(i).evaluate(node => node.tagName) == "P"
       && (await contenidos_elementos.nth(i).evaluate(node => node.innerText)).trim() != ""){
-        console.log(await contenidos_elementos.nth(i).evaluate(node => node.innerText))
         output+=(await contenidos_elementos.nth(i).evaluate(node => node.innerText)) + "\n";
       }
     if(await contenidos_elementos.nth(i).evaluate(node => node.tagName) == "META"){
@@ -655,19 +637,15 @@ const automate_2 = async function (termino: string, debe_buscar_imagenes: boolea
 
   if(debe_buscar_imagenes){
     img = await buscar_imagenes(termino).then((imagen_url) => {
-      console.log('137 handle success here');
       return imagen_url
    }).catch((e) => {
-      console.log('140 handle error here: ', e.message)
       return ""
    });
   }
 
   if(output.length > 0){
     await crear_nota(termino, output, img).then(() => {
-      console.log('147 handle success here');
    }).catch((e) => {
-      console.log('149 handle error here: ', e.message)
    });
   }
 
@@ -761,13 +739,9 @@ const automate = async function (){
     await page.waitForTimeout(3000);
   }
 
-  console.log("Llego aqui 105")
   createEvent("Elison Perez", "Miren", "2024-02-26 10:00 PM", "2024-02-26 11:00 PM").then(() => {
-    console.log('handle success here');
  }).catch((e) => {
-    console.log('handle error here: ', e.message)
  })
-  console.log("Llego aqui 107")
   browser.close();
 }
 
@@ -791,3 +765,51 @@ ipcMain.on('message', async (event, arg) => {
    
   event.reply('message', `Accion completada`);
 }) 
+
+ipcMain.on('download_request', async (event, args) => {
+  console.log("download request!")
+  const imageName = uuidv4();
+  const downloadPath = 'renderer/public/images/classifiers/'+imageName+'.png'; // Replace with your desired download path
+
+  try {
+    const response = await axios({
+      method: 'GET',
+      url: args,
+      responseType: 'stream',
+    });
+
+    // Create a write stream to save the image
+    const writer = fs.createWriteStream(downloadPath);
+
+    // Pipe the response data into the writer stream
+    response.data.pipe(writer);
+
+    // Wait for the image to finish downloading
+    await new Promise((resolve, reject) => {
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
+
+    console.log('Image downloaded successfully!');
+    event.reply('download_request', imageName);
+  } catch (error) {
+    console.error('Error downloading image:', error.message);
+    event.reply('download_request', 0);
+  }
+
+})
+
+
+ipcMain.on('generacion_imagenes', async (event, prompt) => {
+
+  const openai = new OpenAI({apiKey:"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"});
+  const image = await openai.images.generate({ model: "dall-e-2", n: 2 , prompt });
+
+  const images = [];
+
+  for(let i = 0; i < image.data.length; i++){
+    images.push(image.data[i].url);
+  }
+
+  event.reply('generacion_imagenes', images);
+})

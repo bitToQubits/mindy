@@ -6,6 +6,7 @@ export interface Message {
   id: string;
   content: string;
   role: "user" | "assistant" | "system";
+  type: "text" | "image";
   loading?: boolean;
 }
 

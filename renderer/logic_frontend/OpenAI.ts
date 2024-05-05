@@ -212,6 +212,21 @@ export async function streamCompletion(
   );
 }
 
+export async function directResponse(messages: string[], api_key: string) {
+  const response = await axios.post("https://api.openai.com/v1/chat/completions", {
+    stream: false,
+    model: "gpt-3.5-turbo",
+    messages
+  }, {
+    headers: {
+      Authorization: `Bearer ${api_key}`,
+      "Content-Type": "application/json",
+    }
+  });
+  console.log()
+  return response.data.choices[0].message.content;
+}
+
 export const OPENAI_TTS_VOICES = [
   "alloy",
   "echo",
@@ -239,6 +254,8 @@ export async function genAudio({
   voice?: string;
   model?: string;
 }): Promise<string | null> {
+  //4k
+  return;
   if (!voice || !model) {
     throw new Error("Missing voice or model");
   }

@@ -6,6 +6,7 @@ import {
   MantineTheme,
   MediaQuery,
   px,
+  Image
 } from "@mantine/core";
 
 import { IconEdit, IconRepeat, IconSettings, IconX } from "@tabler/icons-react";
@@ -21,6 +22,12 @@ import UserIcon from "./UserIcon";
 import AssistantIcon from "./AssistantIcon";
 
 const useStyles = createStyles((theme: MantineTheme) => ({
+  containerImage:{
+    maxWidth: "ca0lc(100vw - 55px)",
+    [`@media (min-width: ${theme.breakpoints.md})`]: {
+      maxWidth: "calc(820px - 120px)",
+    },
+  },
   container: {
     display: "flex",
     flexDirection: "column",
@@ -178,10 +185,21 @@ export default function ChatDisplay({ message }: { message: Message }) {
               </div>
             </MediaQuery>
 
-            <MessageDisplay
-              message={message}
-              className={classes.messageDisplay}
-            />
+            {
+            message.type != "image" && <MessageDisplay
+                message={message}
+                className={classes.messageDisplay}
+              />
+            }
+
+            {
+            message.type == "image" && 
+              <div className={cx(classes.containerImage, classes.messageDisplay)}>
+                <p><b>{message.role === "assistant" ? "Mindy" : "You"}</b></p>
+                <Image src={message.content} alt={message.id} />
+              </div>
+            }
+
           </div>
           <div className={classes.actionIconsWrapper}>
             <ActionIcon

@@ -118,11 +118,8 @@ export const initPlayback = () => {
       (chunk) => chunk.state === "text"
     );
 
-    console.log("firstIdleChunk: ", firstIdleChunk, playerAudioQueue[firstIdleChunk]);
-
     if (firstIdleChunk !== -1 && playerApiState === "idle") {
       // We need to get more audio
-      console.log("broooo", firstIdleChunk)
       await fetchAudio(firstIdleChunk);
     }
   };
@@ -160,10 +157,8 @@ export const playAudio = (idx: number) => {
     return;
   }
   
-  console.log("Se llego a playAudio")
   if (playerRef.current) {
     playerRef.current.src = playerAudioQueue[idx].blobURL;
-    console.log("Coperas con los federicos")
     ensureListeners(playerRef.current);
 
     const playPromise = playerRef.current.play();
@@ -175,7 +170,6 @@ export const playAudio = (idx: number) => {
           playerState: "playing",
         });
       }).catch(error => {
-        console.log("error!", error)
       });
     }
   }
@@ -196,29 +190,29 @@ const fetchAudio = async (idx: number) => {
 
   set({ playerApiState: "loading" });
 
-  try {
-    const audioURL = await genAudio({
-      text: chunk.text,
-      key: apiKey,
-      region: apiKeyRegion,
-      voice: voiceId,
-      model,
-      style: voiceStyle,
-    });
-    if (audioURL) {
-      set({
-        playerAudioQueue: playerAudioQueue.map((chunk, i) =>
-          i === idx ? { ...chunk, blobURL: audioURL, state: "audio" } : chunk
-        ),
-      });
-      console.log("Donde deberia ser idle: ", get().playerState);
-      if (get().playerState === "idle") {
-        playAudio(idx);
-      }
-    }
-  } catch (error) {
-    console.error(error);
-  }
+  //4k
+  // try {
+  //   const audioURL = await genAudio({
+  //     text: chunk.text,
+  //     key: apiKey,
+  //     region: apiKeyRegion,
+  //     voice: voiceId,
+  //     model,
+  //     style: voiceStyle,
+  //   });
+  //   if (audioURL) {
+  //     set({
+  //       playerAudioQueue: playerAudioQueue.map((chunk, i) =>
+  //         i === idx ? { ...chunk, blobURL: audioURL, state: "audio" } : chunk
+  //       ),
+  //     });
+  //     if (get().playerState === "idle") {
+  //       playAudio(idx);
+  //     }
+  //   }
+  // } catch (error) {
+  //   console.error(error);
+  // }
 
   set({ playerApiState: "idle" });
 };
@@ -231,12 +225,9 @@ const ensureListeners = (audio: HTMLAudioElement) => {
     const { playerIdx, playerAudioQueue } = get();
     set({ playerState: "idle" });
     if (playerIdx + 1 < playerAudioQueue.length) {
-      console.log("playerIdx + 1", playerIdx + 1)
       playAudio(playerIdx + 1);
     }
   }
-
-  console.log("Se llego a establecer audio event listener");
 
   audio.addEventListener("ended", asegurarElSiguienteAudio);
 };

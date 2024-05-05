@@ -1,10 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
 import { Message } from "./Message";
-import { streamCompletion } from "./OpenAI";
+import { streamCompletion, directResponse } from "./OpenAI";
 import { getChatById, updateChatMessages } from "./utils";
 import { notifications } from "@mantine/notifications";
 import { getModelInfo } from "./Model";
 import { useChatStore } from "./ChatStore";
+import { updateChat } from "./ChatActions";
+import axios from "axios";
 
 const get = useChatStore.getState;
 const set = useChatStore.setState;
@@ -31,9 +33,7 @@ export const submitMessage = async (message: Message) => {
     console.error("Chat not found");
     return;
   }else{
-    console.log("Chat mensajes: ", chat.messages)
   }
-  console.log("chat", chat.id);
 
   // If this is an existing message, remove all the messages after it
   const index = chat.messages.findIndex((m) => m.id === message.id);
@@ -69,6 +69,7 @@ export const submitMessage = async (message: Message) => {
           content: "",
           role: "assistant",
           loading: true,
+          type: "text",
         });
       }
       return c;
@@ -160,7 +161,7 @@ export const submitMessage = async (message: Message) => {
   );
 
   const findChatTitle = async () => {
-    const chat = getChatById(get().chats, get().activeChatId);
+    var chat = getChatById(get().chats, get().activeChatId);
     if (chat === undefined) {
       console.error("Chat not found");
       return;
@@ -176,9 +177,8 @@ export const submitMessage = async (message: Message) => {
     ) {
       const msg = {
         id: uuidv4(),
-        content: `Describe the following conversation snippet in 3 words or less.
+        content: `Write the topic of the following conversation snippet in 3 words or less.
               >>>
-              Hello
               ${chat.messages
                 .slice(1)
                 .map((m) => m.content)
@@ -189,7 +189,7 @@ export const submitMessage = async (message: Message) => {
       } as Message;
 
       await streamCompletion(
-        [msg, ...chat.messages.slice(1)],
+        [msg, ...chat.messages],
         settings,
         apiKey,
         undefined,
@@ -204,13 +204,133 @@ export const submitMessage = async (message: Message) => {
                 }
                 // Remove trailing punctuation
                 chat.title = chat.title.replace(/[,.;:!?]$/, "");
+                console.log("Title", chat.title);
               }
               return c;
             }),
           }));
         },
-        updateTokens
-      );
+        clasificar_chat,
+      )
+
+      // const chats = get().chats;
+
+      // for(let i = 0; i < chats.length; i++){
+      //   if(chats[i].id === chat.id){
+      //     console.log(chats[i])
+      //     break;
+      //   }
+      // }
+
     }
   };
+
+  const clasificar_chat = async () => {
+    const chat = getChatById(get().chats, get().activeChatId);
+    const classifiers = get().classifiers;
+    if (chat === undefined) {
+      console.error("Chat not found");
+      return;
+    }
+
+    var msgs = [];
+
+    msgs.push({
+      content: `Classify the user topic in one of the following categories, 
+                if no one suits create a new category: ${classifiers.join(", ")}
+                Also, provide the keyword in order to search for an unplash image related
+                to the category.
+                Put the category name followed by a comma and then the keyword.
+
+                Example.
+
+                Input:
+                Explain to me some basic OOP principles.
+
+                Your output:
+                Programming, computers.
+              `,
+      role: "system",
+    });
+
+    msgs.push({
+      content: chat.messages[1].content + " " + chat.title,
+      role: "user",
+    })
+
+    directResponse(
+      msgs,
+      apiKey,
+    ).then((contenido) => {
+      console.log("contenido", contenido);
+      var category_name = contenido.split(",")[0];
+      var keywords = contenido.split(",")[1];
+
+      if(classifiers.filter((classifier) => {
+        console.log(classifier.title + " === " + category_name.trim())
+        return classifier.title === category_name.trim();
+      }).length == 0){
+        console.log("se fue por aqui 282")
+        axios.get('https://api.unsplash.com/search/photos', {
+          params: {
+            query: keywords,
+            per_page: 1,
+            page: 1,
+            orientation: "landscape"
+          },
+          headers: {
+            'Authorization': `Client-ID Pshk--FgfWEn_Kjz8iY-pbb72Ux9P94QFA0auXpfbZo`
+          }
+        })
+        .then(function (response) {
+          window.ipc.send('download_request', response.data.results[0].urls.regular);
+          console.log("273: ",response.data.results[0].urls.regular)
+          window.ipc.on('download_request', (imageName: string) => {
+            const id_classifier = uuidv4();
+            updateChat({ id: activeChatId, classifier: id_classifier });
+            set((state) => ({
+              classifiers: [
+                ...state.classifiers,
+                {
+                  id: id_classifier,
+                  title: category_name.trim(),
+                  createdAt: new Date(),
+                  image: imageName,
+                  num_chats: 1,
+                },
+              ]
+            }));
+            console.log("Aqui el error con el imageName", imageName);
+            window.ipc.off('download_request');
+          })
+        })
+        .catch(function (error) {
+          console.log(error);
+        })
+      }else{
+        console.log("se fue por aqui 305");
+        const id_classifier = classifiers.filter((classifier) => {
+          console.log("2: " + classifier.title + " === " + category_name.trim())
+          return classifier.title === category_name.trim();
+        })[0].id;
+        updateChat({ id: activeChatId, classifier: id_classifier });
+        set((state) => ({
+          classifiers: state.classifiers.map((classifier) => {
+            if(classifier.id === id_classifier){
+              classifier.num_chats += 1;
+            }
+            return classifier;
+          }),
+        }));
+      }
+
+    }).catch((e) => {
+      console.log("Error fatal", e);
+    });
+    
+  };
+
+  function registrar_clasificacion(){
+    
+  }
 };

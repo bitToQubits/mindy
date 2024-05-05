@@ -5,6 +5,7 @@ import {
   Box,
 } from "@mantine/core";
 import { useChatStore } from "../logic_frontend/ChatStore";
+import { v4 as uuidv4 } from "uuid";
 
 import ChatMessage from "./ChatMessage";
 import * as OpusRecorder from '../logic_frontend/RecorderActions';
@@ -18,6 +19,7 @@ import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass';
 import AudioPlayer from "../components/AudioPlayer";
+import {notifications} from '@mantine/notifications';
 
 const ChatDisplay = () => {
   const router = useRouter();
@@ -27,17 +29,6 @@ const ChatDisplay = () => {
   useEffect(() => {
     setIsHydrated(true);
     setActiveChatId(activeChatId as string | undefined);
-
-    // if (audioElement.srcObject !== null) {
-    //   // Disconnect the MediaElementSourceNode
-    //   audioElement.srcObject.disconnect();
-  
-    //   // Set the srcObject property to null
-    //   audioElement.srcObject = null;
-  
-    //   console.log('MediaElementSourceNode disconnected and destroyed.');
-    // }
-
   }, [activeChatId]);
 
   const [text, setText] = useState('Your friend, only better.');
@@ -52,6 +43,7 @@ const ChatDisplay = () => {
   var activeChat = chats.find((chat) => chat.id === activeChatId);
 
   const [color, setColor] = useState('white');
+  const set = useChatStore.setState;
 
   const lastMessage = activeChat?.messages[activeChat.messages.length - 1];
 
@@ -79,7 +71,24 @@ const ChatDisplay = () => {
   }, [isScrolledToBottom, activeChat, lastMessage?.content]);
 
   useEffect(() => {
-    console.log("Ya cargo", audioState)
+    return () => {
+      window.removeEventListener('resize', recalculo_esferico);
+      document.removeEventListener('mousemove', movimiento_mouse);
+      mesh?.geometry.dispose();
+      mesh?.material.dispose();
+      scene?.remove(mesh);
+      renderer?.dispose();
+      renderer = null;
+      scene = null;
+      camera = null;
+      clock = null;
+      bloomComposer = null;
+      scene = null;
+      cancelAnimationFrame(requestID);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolledToBottom(scrolledToBottom());
     };
@@ -92,7 +101,6 @@ const ChatDisplay = () => {
         return;
       }
       if(event.key == "k"){
-        console.log("handlekeydown",audioState)
         if (audioState === "idle") {
           Recorder.startRecording();
           setText('I am hearing you.');
@@ -101,19 +109,52 @@ const ChatDisplay = () => {
           return;
         }
       }else{
-        window.ipc.send('message', 'Hello')
+        window.ipc.send('generacion_imagenes', "a cute little dog");
+        window.ipc.on('generacion_imagenes', (images: string[]) => {
+
+          if(images.length == 0){
+            notifications.show({
+              title: "Error",
+              message: "No images generated",
+              color: "gray",
+            });
+            return;
+          }
+
+          for(let i = 0; i < images.length; i++){
+            // Add the assistant's response
+            set((state) => ({
+              chats: state.chats.map((c) => {
+                if (c.id === state.activeChatId) {
+                  c.messages.push({
+                    id: uuidv4(),
+                    content: images[i],
+                    role: "assistant",
+                    loading: false,
+                    type: "image",
+                  });
+                }
+                return c;
+              }),
+            }));
+          }
+
+          notifications.show({
+            title: "Action finished",
+            message: "Images generated successfully",
+            color: "green",
+          });
+        });
       }
     };
     
     const handleKeyUp = (event) => {
-      console.log("handlekeyup",audioState)
       if(event.key == "k"){
         Recorder.stopRecording(true);
         setText('Your friend, only better.');
         setColor('white');
       }
     };
-
 
     // Add event listener
     window.addEventListener('keydown', handleKeyDown);
@@ -130,28 +171,43 @@ const ChatDisplay = () => {
   }, [audioState]);
 
   let mediaElement;
+  var camera;
+  var uniforms;
+  var mouseX;
+  var mouseY;
+  var scene;
+  var clock;
+  var analyser;
+  var bloomComposer;
+  var mesh;
+  var bloomPass;
+  var tamanoMindyText;
+
+  var largoReal;
+  var alturaReal;
+  var renderer;
+  let sound;
+  var requestID;
+
+  function movimiento_mouse(e){
+    let windowHalfX = window.innerWidth / 2;
+    let windowHalfY = window.innerHeight / 2;
+    mouseX = (e.clientX - windowHalfX) / 100;
+    mouseY = (e.clientY - windowHalfY) / 100;
+  }
+
+  function recalculo_esferico(){
+    camera.aspect = largoReal / (alturaReal - tamanoMindyText);
+    camera.updateProjectionMatrix();
+    renderer.setSize(largoReal, alturaReal - tamanoMindyText);
+    bloomComposer.setSize(largoReal, alturaReal - tamanoMindyText);
+  }
 
   useEffect(() => {
 
-    var camera;
-    var uniforms;
-    var mouseX;
-    var mouseY;
-    var scene;
-    var clock;
-    var analyser;
-    var bloomComposer;
-    var mesh;
-    var bloomPass;
-    var tamanoMindyText;
-
-    var largoReal;
-    var alturaReal;
-    var renderer;
-    let sound;
 
     function animate() {
-      requestAnimationFrame(animate);
+      requestID = requestAnimationFrame(animate);
       camera.position.x += (mouseX - camera.position.x) * .05;
       camera.position.y += (-mouseY - camera.position.y) * 0.5;
       camera.lookAt(scene.position);
@@ -160,27 +216,11 @@ const ChatDisplay = () => {
       bloomComposer.render();
     }
 
-    function movimiento_mouse(e){
-      let windowHalfX = window.innerWidth / 2;
-      let windowHalfY = window.innerHeight / 2;
-      mouseX = (e.clientX - windowHalfX) / 100;
-      mouseY = (e.clientY - windowHalfY) / 100;
-    }
-
-    function recalculo_esferico(){
-      camera.aspect = largoReal / (alturaReal - tamanoMindyText);
-      camera.updateProjectionMatrix();
-      renderer.setSize(largoReal, alturaReal - tamanoMindyText);
-      bloomComposer.setSize(largoReal, alturaReal - tamanoMindyText);
-    }
-
     if(document.getElementById('pechurina') && document.querySelector('#pechurina').innerHTML == "" && document.querySelector('audio')){ 
       renderer = new THREE.WebGLRenderer({antialias: true});
       tamanoMindyText = document.getElementById('mindyText')?.clientHeight + 20;
       largoReal = document.getElementById('contenedorGrafico')?.clientWidth;
       alturaReal = document.getElementById('contenedorGrafico')?.clientHeight;
-
-      console.log("Se descuido", largoReal, alturaReal, tamanoMindyText);
 
       renderer.setSize(largoReal, alturaReal - tamanoMindyText);
       document.getElementById('pechurina').appendChild(renderer.domElement);
@@ -356,8 +396,6 @@ const ChatDisplay = () => {
       camera.add(listener); 
       
       sound = new THREE.Audio(listener);
-
-      console.log("Chat: ", sound.source, sound.sourceType)
       
       const audioElement = document.querySelector('audio');
 
@@ -380,15 +418,6 @@ const ChatDisplay = () => {
       window.addEventListener('resize', recalculo_esferico);
     }
 
-    // return () => {
-    //   window.removeEventListener('resize', recalculo_esferico);
-    //   document.removeEventListener('mousemove', movimiento_mouse);
-
-    //   if(sound){
-    //     console.log("Se desconecto")
-    //     sound.disconnect();
-    //   }
-    // }
   }, [isHydrated]);
 
   return (
