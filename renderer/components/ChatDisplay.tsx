@@ -109,6 +109,11 @@ const ChatDisplay = () => {
           return;
         }
       }else{
+        notifications.show({
+          title: "Action started",
+          message: "Generating images",
+          color: "red",
+        });
         window.ipc.send('generacion_imagenes', "a cute little dog");
         window.ipc.on('generacion_imagenes', (images: string[]) => {
 

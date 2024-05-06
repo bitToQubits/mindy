@@ -290,17 +290,17 @@ export default function NavbarSimple() {
         </Navbar.Section>
       </MediaQuery>
       <Navbar.Section className={classes.footer}>
-        {classifiers?.length > 0 && <a href="#" className={classes.link} onClick={
+        <a href="#" className={classes.link} onClick={
           (event) => {
             event.preventDefault();
-            router.push("/topicosClasificacion");
+            router.push("/mind");
           }
         }>
           <>
               <IconBooks className={classes.linkIcon} stroke={1.5} />
               <span>Mind Module</span>
           </>
-        </a>}
+        </a>
 
         {links?.length > 0 && (
           <ClearChatsButton

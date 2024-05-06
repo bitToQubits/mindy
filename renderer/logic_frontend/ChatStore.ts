@@ -131,8 +131,8 @@ export interface ChatState {
   showTextDuringPTT: boolean;
   autoSendStreamingSTT: boolean;
   modelChoicesChat: string[] | undefined;
-  // modelChoiceTTS: string | "11labs";
-  modelChoiceTTS: string | "openai";
+  modelChoiceTTS: string | "11labs";
+  // modelChoiceTTS: string | "openai";
   modelChoiceSTT: string | "whisper";
   textInputValue: string;
 }
@@ -176,8 +176,8 @@ export const initialState = {
   autoSendStreamingSTT: true,
   modelChoicesChat: undefined,
   modelChoiceChat: undefined,
-  // modelChoiceTTS: "11labs",
-  modelChoiceTTS: "openai",
+  modelChoiceTTS: "11labs",
+  // modelChoiceTTS: "openai",
   modelChoiceSTT: "whisper",
   textInputValue: "",
 };

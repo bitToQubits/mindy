@@ -37,7 +37,7 @@ const getVars = (): VarsShape => {
     case '11labs':
       return {
         apiKey: state.apiKey11Labs,
-        voiceId: state.settingsForm.voice_id || DEFAULT_11LABS_VOICE,
+        voiceId: "mWsaugnzxPXnXHgFS0Iv",
         genAudio: genAudio11Labs,
       };
     case 'openai':
@@ -188,9 +188,9 @@ const fetchAudio = async (idx: number) => {
     return;
   }
 
-  set({ playerApiState: "loading" });
+  // set({ playerApiState: "loading" });
 
-  //4k
+  // 4k
   // try {
   //   const audioURL = await genAudio({
   //     text: chunk.text,

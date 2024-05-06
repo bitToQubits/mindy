@@ -6,12 +6,12 @@ import { chromium, Page } from 'playwright';
 import os from 'node:os';
 import axios from 'axios';
 import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from 'fs';
 import { ElevenLabsClient, play  } from "elevenlabs";
 import { v4 as uuidv4 } from "uuid";
+import { Groq } from "groq-sdk";
 
-const unidecode = require('unidecode'); 
+var markdownpdf = require("markdown-pdf");
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -154,357 +154,7 @@ const automate_4 = async function (instruccion: string, nombre_archivo: string){
 
 }
 
-const automate_3 = async function (tema: string, plantilla: string = ""){
-  var indices_a_eliminar = [];
-  const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Local\\Google\\Chrome\\User Data';
-  const profileDirectory = 'Default';
 
-  async function removeCharsByIndex(text, indicesToRemove) {
-    let result = "";
-    for (let i = 0; i < text.length; i++) {
-        if (!indicesToRemove.includes(i)) {
-            result += text[i];
-        }
-    }
-    return result;
-  }
-
-  const isNumeric = (n: any): boolean => {
-    return !isNaN(parseFloat(n)) && isFinite(n);
-  };
-
-  let tematica = "";
-  let tematica_imagenes = [];
-  let identificar_tematica = false;
-  let count = 0;
-  var model;
-  var text_input;
-  let saltos_linea = 0;
-
-  let texto_completo = "";
-
-  async function generar_contenido(subtema: string, continuacion: string){
-      await page.setDefaultTimeout( 60000 * 10 )
-      var response;
-      if(continuacion == ""){
-        response = await model.generateContentStream("Use markdown to format your answer, use ONLY ###,####, #### for titles. Dont put any conclusion section in your answer, unless the subtopic includes it. Explain the following topic in detail: subtopic:" + subtema + " general topic:" + tema)
-      }else{
-        response = await model.generateContentStream("Use markdown to format your answer, use ONLY ###,####,#### for titles. Dont put any conclusion section in your answer, unless the subtopic includes it. The general topic is "+tema+" . Continue the following topic in detail, from this line: "+continuacion)
-      }
-
-      var markdown = false;
-      var markdown_2 = false;
-
-      for await (const chunk of response.stream){
-        let texto = "";
-        try{
-          texto = chunk.text();
-        }catch{
-          if(response.candidates[0].finish_reason == "RECITATION"){
-            await generar_contenido(subtema, response.candidates[0].content.parts.text).then(function () {
-            })
-            .catch(function (error) {
-            });
-          }
-        }
-
-        indices_a_eliminar = [];
-
-        for (var i = 0; i < texto.length - 1; i++){
-          count += 1;
-
-          if(markdown && texto[i] == "\n" && !((texto[i + 1] == "*" || texto[i + 1] == "-" || texto[i + 1] == "\n" || texto[i + 1] == " ")  && (i + 2 < texto.length && texto[i + 2] == " "))){
-            markdown = false
-          }else if(markdown_2 && texto[i] == "\n" && !(texto[i + 1] == "\n" || texto[i + 1] == " " || (isNumeric(texto[i + 1]) && (i + 2 < texto.length && texto[i + 2] == ".")))){
-            markdown_2 = false
-          }
-
-          if(markdown && (texto[i] == "*" || texto[i] == "-") && texto[i + 1] == " " && (i == 0 || (texto[i - 1] != "*"))){
-            indices_a_eliminar.push(i)
-            indices_a_eliminar.push(i + 1)
-          }else if(markdown_2 && isNumeric(texto[i]) && texto[i + 1] == "."){
-            indices_a_eliminar.push(i)
-            indices_a_eliminar.push(i + 1)
-          }
-
-          if(!markdown && (texto[i] == "*" || texto[i] == "-") && texto[i + 1] == " " && (i == 0 || (texto[i - 1] != "*"))){
-            markdown = true
-          }else if (!markdown_2 && isNumeric(texto[i]) && texto[i + 1] == "."){
-            markdown_2 = true
-          }else{
-              if(!markdown){
-                //En caso que la respuesta de la api sea incompleta
-                if(texto[i] == " "){
-                  if(texto_completo.length >= 2 && (texto_completo[texto_completo.length-2] == "*" || texto_completo[texto_completo.length-2] == "-") && !(texto_completo.length == 2 || texto_completo[texto_completo.length-3] == "*")){
-                    markdown = true
-                  }else if(texto_completo.length >= 1 && (texto_completo[texto_completo.length-1] == "*" || texto_completo[texto_completo.length-1] == "-") && !(texto_completo.length == 1 || texto_completo[texto_completo.length-2] == "*")){
-                    markdown = true
-                  }
-                }
-              }else if (!markdown_2){
-                  if(texto[i] == "."){
-                    if(texto_completo.length >= 2 && isNumeric(texto_completo[texto_completo.length-2])){
-                      markdown_2 = true
-                    }else if(texto_completo.length >= 1 && isNumeric(texto_completo[texto_completo.length-1])){
-                      markdown_2 = true
-                    }
-                  }
-              }
-          }
-
-          if(count >= 75){
-            await page.mouse.wheel(0, 60)
-            count = 0
-          }
-
-        }
-
-        let texto_final = await unidecode(await removeCharsByIndex(texto,indices_a_eliminar))
-
-        if(texto_final != ""){
-          texto_completo += await texto_final
-          // text_input = await page.locator(".kix-canvas-tile-content").last();
-          await text_input.pressSequentially(texto_final)
-        }
-      }
-
-      await page.keyboard.press("Enter");
-      await page.keyboard.press("Enter");
-  }
-
-  const openai_client = new OpenAI({apiKey:"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"});
-
-  let respuesta_division_tematica_openai = await openai_client.chat.completions.create({
-    messages: [{"role": "system", "content": "Your task will be to divide a topic by thematic points. Output a list separated by comas, only the topic, subtopics and the comas. The topic will be preceed by -- to distinct itself from the subtopics."},
-        {"role": "user", "content": tema}],
-    model: "gpt-4-turbo",
-  })
-
-  var division_temas = respuesta_division_tematica_openai.choices[0].message.content.split(",");
-
-
-  for(var i = 0; i < division_temas.length; i++){
-    if(division_temas[i].trim().startsWith("--")){
-      tema = division_temas[i].replace("--", "");
-      division_temas.splice(i,1);
-      break;
-    }
-  }
-
-  const browser = await chromium.launchPersistentContext(
-    userDataDir, 
-    {
-      headless: false, // Adjust as needed
-      args: [`--profile-directory=${profileDirectory}`]
-    }
-  );
-
-  var page = await browser.newPage();
-
-  page.setDefaultTimeout( 60000 );
-
-  await page.goto('https://docs.google.com/document/u/0/');
-
-  let no_se_pudo_encontrar_plantilla = true;
-
-  if(plantilla != ""){
-    let buscador = await page.locator("[name='q']");
-    await buscador.fill(plantilla);
-
-    let boton_busqueda = await page.locator("form[role='search'] button");
-    await boton_busqueda.nth(2).click();
-
-    let plantillas = await page.locator(".docs-homescreen-grid-item");
-
-    await page.waitForTimeout(2500);
-
-    if(await plantillas.count() >= 1 && await plantillas.nth(0).isVisible()){
-      await plantillas.nth(0).click();
-      no_se_pudo_encontrar_plantilla = false;
-
-      page.waitForLoadState();
-      await page.waitForTimeout(2000);
-
-      let menu_archivo = await page.locator("#docs-file-menu");
-      await menu_archivo.first().click();
-
-      menu_archivo = await page.locator('.goog-menuitem.apps-menuitem');
-      await menu_archivo.nth(3).click();
-
-      await page.waitForTimeout(2000);
-
-      menu_archivo = await page.locator('.docs-copydocdialog-elements input');
-      await menu_archivo.nth(0).fill(tema);
-
-      await page.waitForTimeout(2000);
-
-      menu_archivo = await page.locator("button[name='copy']");
-
-      const promesaPag = browser.waitForEvent('page');
-      await menu_archivo.first().click();
-      const newPage = await promesaPag;
-      await newPage.waitForLoadState();
-      page = newPage;
-
-    }else{
-      await page.goto("https://docs.google.com/document/?usp=docs_alc&authuser=0")
-    }
-  }
-
-  text_input = page.locator(".kix-canvas-tile-content").last();
-
-    if(no_se_pudo_encontrar_plantilla){
-      let plantillas = await page.locator(".docs-homescreen-templates-templateview")
-      plantillas.nth(0).click()
-      let titulo = await page.locator(".docs-title-input")
-      await titulo.clear()
-      await titulo.fill(tema)
-    }else{
-      const terminos_a_remplazar_plantilla = {
-        "Nombres:" : "Jorge Luis Báez y Josue Acosta",
-        "Curso:" : "5to Informática",
-        "Materia:" : "-",
-        "Profesor@:" : "Elison Perez, Austria Mota, Xiomara Rivas",
-        "Colegio:" : "Colegio Preuniversitario Pedro Henriquez Ureña",
-        "Año escolar:" : "2023-2024",
-        "Tema:" : tema
-      }
-
-      for (let [llave, termino] of Object.entries(terminos_a_remplazar_plantilla)){
-
-        await page.mouse.wheel(0, 100);
-
-        await page.keyboard.press("Control+f")
-        await page.locator('[role="searchbox"]').fill(llave)
-        await page.keyboard.press("Enter")
-        await page.locator('.docs-slidingdialog-button-close').click()
-        await page.keyboard.press("ArrowRight")
-        await page.locator('#boldButton').click()
-        await text_input.pressSequentially(unidecode(" " + termino))
-      }
-    }
-
-    if(!no_se_pudo_encontrar_plantilla){
-      await page.keyboard.press("PageDown")
-      await page.keyboard.press("PageDown")
-
-      for(var i = 0; i < 20; i++){
-        await page.keyboard.press("ArrowDown");
-      }
-
-      await page.keyboard.press("Control+Enter");
-
-    }else{
-      await text_input.click();
-      await text_input.focus();
-    }
-
-    await text_input.pressSequentially(unidecode("# "+tema));
-    await page.keyboard.press("Enter");
-    await page.keyboard.press("Enter");
-
-    await text_input.pressSequentially("## Table of Contents");
-    await page.keyboard.press("Enter");
-
-    let insertar_opcion = await page.locator("#docs-insert-menu")
-    await insertar_opcion.click()
-    insertar_opcion = await page.locator(".goog-menuitem.apps-menuitem.goog-submenu");
-    await insertar_opcion.nth(19).hover();
-    insertar_opcion = await page.locator('.docs-preview-palette-item');
-    await insertar_opcion.nth(7).click();
-
-    await page.keyboard.press("Enter");
-
-    const genAI = new GoogleGenerativeAI("AIzaSyAiB6m3aUuRaXMHthpNeLFoYcQI5wmcdIk");
-
-    model = genAI.getGenerativeModel({ model: "gemini-pro"});
-
-    for (let subtema of division_temas){
-      await text_input.pressSequentially(unidecode("## " + subtema));
-      await page.keyboard.press("Enter");
-      await generar_contenido(subtema, "").then(function () {
-      })
-      .catch(function (error) {
-      });
-    }
-
-    page.setDefaultTimeout( 60000 );
-
-    count = 0;
-
-    for await (let caracter of texto_completo){
-      if(count >= 83){
-        saltos_linea += 1
-        count = 0
-      }
-
-      saltos_linea += (caracter.match(/\n/g) || []).length;
-
-      if(caracter.startsWith("#")){
-        identificar_tematica = true
-      }
-
-      if(identificar_tematica){
-        if(caracter.includes("\n")){
-            tematica+=caracter
-            if(tematica_imagenes.length < 2){
-              tematica_imagenes.push((tematica.replace("\n", ""), saltos_linea))
-            }
-            identificar_tematica = false
-            tematica = ""
-        }else{
-          tematica+=caracter
-        }
-      }
-    }
-
-    await page.keyboard.press("Control+f");
-
-    await page.locator('[role="searchbox"]').fill(tema);
-
-    await page.keyboard.press("Enter");
-
-    let contab = await page.locator(".docs-findinput-count").textContent();
-    let primer_par_numero = "";
-
-    for (let c of contab){
-      if(c != " "){
-        primer_par_numero+=c;
-      }else{
-        break;
-      }
-    }
-
-    while (primer_par_numero != "1"){
-      await page.locator('#docs-findbar-button-next').click();
-      contab = await page.locator(".docs-findinput-count").textContent();
-      primer_par_numero = "";
-      for (let c of contab){
-        if(c != " "){
-          primer_par_numero+=c;
-        }else{
-          break;
-        }
-      }
-    }
-
-    await page.locator('.docs-slidingdialog-button-close').click()
-
-    await page.keyboard.press("ArrowRight")
-
-    while(await page.locator('.kix-toc-bubble-reload-bubble.goog-inline-block').isHidden()){
-      await page.keyboard.press("ArrowDown");
-    }
-
-    //boton de refrescar
-    await page.locator('.kix-toc-bubble-reload-bubble.goog-inline-block').click()
-
-    await page.keyboard.press("ArrowDown");
-
-    await page.waitForTimeout(12000);
-
-    browser.close();
-  }
 
 const automate_2 = async function (termino: string, debe_buscar_imagenes: boolean){
   const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Local\\Google\\Chrome\\User Data';
@@ -813,3 +463,101 @@ ipcMain.on('generacion_imagenes', async (event, prompt) => {
 
   event.reply('generacion_imagenes', images);
 })
+
+ipcMain.on('generacion_documentos', async (event, tema) => {
+
+  var texto_completo = "";
+  async function generar_contenido(subtema: string){
+      var response;
+      response = await groq.chat.completions.create({
+        messages: [
+          { role: 'system', content: "Use markdown to format your answer. Dont put any conclusion section in your answer, unless the subtopic includes it. You will explain the user topic in detail."},
+          { role: 'user', content: subtema + ", " + tema },
+        ],
+        model: 'llama3-70b-8192',
+      });
+      response = response.choices[0].message.content;
+      texto_completo += response;
+  }
+
+  const openai_client = new OpenAI({apiKey:"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"});
+
+  let respuesta_division_tematica_openai = await openai_client.chat.completions.create({
+    messages: [{"role": "system", "content": "Your task will be to divide a topic by thematic points. Output a list separated by comas, only the topic, subtopics and the comas. The topic will be preceed by -- to distinct itself from the subtopics."},
+    {"role": "user", "content": tema}],
+    model: "gpt-4-turbo",
+  });
+
+  var division_temas = respuesta_division_tematica_openai.choices[0].message.content.split(",");
+
+  for(var i = 0; i < division_temas.length; i++){
+    if(division_temas[i].trim().startsWith("--")){
+      tema = division_temas[i].replace("--", "");
+      division_temas.splice(i,1);
+      break;
+    }
+  }
+
+  texto_completo+="# "+tema+"\n\n";
+
+  const groq = new Groq({apiKey:"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"});
+  
+  for await (let subtema of division_temas){
+    await generar_contenido(subtema).then(function () {
+      console.log(texto_completo);
+    })
+    .catch(function (error) {
+      console.log("Error generando documento: ", error);
+    });
+    texto_completo+="\n\n";
+  }
+
+  const output_path = "./renderer/public/documents/"+tema+".pdf";
+
+  // markdownpdf().from.string(texto_completo).to(output_path, function () {
+  //   event.reply('generacion_documentos', tema);
+  // })
+  
+  var nodePandoc = require('node-pandoc');
+
+  var args, callback;
+  
+  // Arguments can be either a single string:
+  args = '-f markdown -t pdf -o ./tema.pdf --toc=true';
+  
+  // Set your callback function
+  callback = function (err, result) {
+  
+    if (err) {
+      console.error('Oh Nos: ',err);
+    }
+  
+    // For output to files, the 'result' will be a boolean 'true'.
+    // Otherwise, the converted value will be returned.
+    console.log(result);
+    return result;
+  };
+  
+  // Call pandoc
+  nodePandoc(texto_completo, args, callback);
+  event.reply('generacion_documentos', tema);
+})
+
+ipcMain.on('eliminar_todas_imagenes_clasificacion', async (event) => {
+  const directory = 'renderer/public/images/classifiers';
+
+  fs.readdir(directory, (err, files) => {
+    if (err) throw err;
+
+    for (const file of files) {
+      fs.unlink(path.join(directory, file), err => {
+        if (err){
+          event.reply('eliminar_todas_imagenes_clasificacion', "Error while trying to remove images" + err);
+        }
+      });
+    }
+  }
+  );
+
+  event.reply('eliminar_todas_imagenes_clasificacion', "All data classifications removed");
+});

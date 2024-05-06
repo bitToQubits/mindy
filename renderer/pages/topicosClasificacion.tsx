@@ -3,6 +3,7 @@ import TopicCard from "../components/TopicCard";
 import { Grid, Button } from '@mantine/core';
 import { IconTrash } from '@tabler/icons-react';
 import { useChatStore } from "../logic_frontend/ChatStore";
+import {notifications} from '@mantine/notifications';
 
 export default function Page(){
 
@@ -10,6 +11,16 @@ export default function Page(){
 
     function eliminarTodosLosTopicos(){
         useChatStore.setState({ classifiers: [] });
+        
+        window.ipc.send('eliminar_todas_imagenes_clasificacion', {});
+        window.ipc.on('eliminar_todas_imagenes_clasificacion', (mensaje: string) => {
+            notifications.show({
+              title: "Action finished",
+              message: mensaje,
+              color: "red",
+            });
+            window.ipc.off('eliminar_todas_imagenes_clasificacion');
+        });
     }
 
     return (

@@ -3,7 +3,6 @@ import { notifications } from "@mantine/notifications";
 const BASE_URL = "https://api.elevenlabs.io/v1";
 
 export const testKey = async (apiKey: string): Promise<boolean> => {
-  return;
   try {
     const response = await fetch(`${BASE_URL}/voices`, {
       method: "GET",

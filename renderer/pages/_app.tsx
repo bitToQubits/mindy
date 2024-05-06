@@ -43,7 +43,7 @@ export default function App(props: AppProps) {
             colorScheme,
             primaryColor: "bluu",
             colors: {
-              // https://smart-swatch.netlify.app/#5E6AD2
+              //https://smart-swatch.netlify.app/#5E6AD2
               bluu: [
                 "#e8edff",
                 "#c2c8f3",
@@ -56,7 +56,7 @@ export default function App(props: AppProps) {
                 "#0e1540",
                 "#04061b",
               ],
-              // https://smart-swatch.netlify.app/#2A2D3D
+              //https://smart-swatch.netlify.app/#2A2D3D
               dark: [
                 "#eef1fd",
                 "#d1d4e3",

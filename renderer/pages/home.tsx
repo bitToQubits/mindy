@@ -61,24 +61,15 @@ export default function Page(){
       }else{
         notifications.show({
           title: "Action started",
-          message: "Generating images",
+          message: "Generating document",
           color: "red",
         });
-        window.ipc.send('generacion_imagenes', "a cute little dog");
-        window.ipc.on('generacion_imagenes', (images: string[]) => {
-
-          if(images.length == 0){
-            notifications.show({
-              title: "Error",
-              message: "No images generated",
-              color: "gray",
-            });
-            return;
-          }
-
+        window.ipc.send('generacion_documentos', "Explain in great detail the history of USA");
+        window.ipc.on('generacion_documentos', (documento: string) => {
+          console.log("Documento generado: ",documento)
           notifications.show({
             title: "Action finished",
-            message: "Images generated successfully",
+            message: "Document generated successfully",
             color: "green",
           });
         });
@@ -114,7 +105,9 @@ export default function Page(){
       clock = null;
       bloomComposer = null;
       scene = null;
-      cancelAnimationFrame(requestID);
+      if(requestID){
+        cancelAnimationFrame(requestID);
+      }
     };
   }, []); // Empty dependency array means this effect runs once on mount
 

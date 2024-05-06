@@ -1,0 +1,32 @@
+.card {
+    margin: 10%;
+}
+
+.title {
+  font-family:
+    Greycliff CF,
+    var(--mantine-font-family);
+  font-weight: 700;
+    font-size: 30px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 3px;
+  height: rem(90px);
+  background-color: #242424;
+  transition:
+    box-shadow 150ms ease,
+    transform 100ms ease;
+
+    padding: 1rem;
+}
+
+.item:hover {
+    box-shadow: 0 calc(0.0625rem*var(--mantine-scale)) calc(0.1875rem*var(--mantine-scale)) rgba(0,0,0,.05),rgba(0,0,0,.05) 0 calc(1.25rem*var(--mantine-scale)) calc(1.5625rem*var(--mantine-scale)) calc(-0.3125rem*var(--mantine-scale)),rgba(0,0,0,.04) 0 calc(0.625rem*var(--mantine-scale)) calc(0.625rem*var(--mantine-scale)) calc(-0.3125rem*var(--mantine-scale));
+    transform: scale(1.05);
+}
