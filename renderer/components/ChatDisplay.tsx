@@ -94,9 +94,6 @@ const ChatDisplay = () => {
     };
 
     const handleKeyDown = (event) => {
-      if(!["k", "l"].includes(event.key)){
-        return;
-      }
       if (event.repeat) {
         return;
       }
@@ -108,48 +105,6 @@ const ChatDisplay = () => {
         } else if (audioState === "transcribing") {
           return;
         }
-      }else{
-        notifications.show({
-          title: "Action started",
-          message: "Generating images",
-          color: "red",
-        });
-        window.ipc.send('generacion_imagenes', "a cute little dog");
-        window.ipc.on('generacion_imagenes', (images: string[]) => {
-
-          if(images.length == 0){
-            notifications.show({
-              title: "Error",
-              message: "No images generated",
-              color: "gray",
-            });
-            return;
-          }
-
-          for(let i = 0; i < images.length; i++){
-            // Add the assistant's response
-            set((state) => ({
-              chats: state.chats.map((c) => {
-                if (c.id === state.activeChatId) {
-                  c.messages.push({
-                    id: uuidv4(),
-                    content: images[i],
-                    role: "assistant",
-                    loading: false,
-                    type: "image",
-                  });
-                }
-                return c;
-              }),
-            }));
-          }
-
-          notifications.show({
-            title: "Action finished",
-            message: "Images generated successfully",
-            color: "green",
-          });
-        });
       }
     };
     
@@ -209,7 +164,6 @@ const ChatDisplay = () => {
   }
 
   useEffect(() => {
-
 
     function animate() {
       requestID = requestAnimationFrame(animate);
@@ -430,7 +384,7 @@ const ChatDisplay = () => {
       <main className={styles.center_vertically} style={{width: "99%"}}>
         <Grid>
           <Grid.Col span={8} id="contenedorGrafico">
-            <div id="pechurina">
+            <div id="pechurina" className={styles.center_horizontally}>
 
             </div>
             <div className={styles.text_center} id="mindyText">
@@ -441,7 +395,7 @@ const ChatDisplay = () => {
           <Grid.Col span={4}>
             <ScrollArea viewportRef={viewport} w="100%" h={580} type="auto" offsetScrollbars scrollbarSize={8}>
               <Box>
-                {activeChat?.messages.map((message) => (
+                {activeChat?.messages.slice(2).map((message) => (
                 <ChatMessage key={message.id} message={message} />
                 ))}
               </Box>

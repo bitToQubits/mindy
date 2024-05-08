@@ -171,16 +171,17 @@ export const submitMessage = async (message: Message) => {
       .map((m) => m.content.split(" ").length)
       .reduce((a, b) => a + b, 0);
     if (
-      chat.messages.length >= 2 &&
+      chat.messages.length > 3 &&
       chat.title === undefined &&
       numWords >= 4
     ) {
       const msg = {
         id: uuidv4(),
-        content: `Write the topic of the following conversation snippet in 3 words or less.
+        content: `Write the topic of the following conversation snippet in 3 words or less. 
+        ONLY THE TOPIC NAME, not like The topic is ..., only topic name. Don't include the word topic.
               >>>
               ${chat.messages
-                .slice(1)
+                .slice(2)
                 .map((m) => m.content)
                 .join("\n")}
               >>>
@@ -188,8 +189,10 @@ export const submitMessage = async (message: Message) => {
         role: "system",
       } as Message;
 
+      console.log("mesagee", msg);
+
       await streamCompletion(
-        [msg, ...chat.messages],
+        [msg],
         settings,
         apiKey,
         undefined,
@@ -204,7 +207,6 @@ export const submitMessage = async (message: Message) => {
                 }
                 // Remove trailing punctuation
                 chat.title = chat.title.replace(/[,.;:!?]$/, "");
-                console.log("Title", chat.title);
               }
               return c;
             }),
@@ -235,9 +237,13 @@ export const submitMessage = async (message: Message) => {
 
     var msgs = [];
 
+    console.log("Classifiers: ",classifiers)
+
     msgs.push({
       content: `Classify the user topic in one of the following categories, 
-                if no one suits create a new category: ${classifiers.join(", ")}
+                if no one suits create a new category: ${classifiers
+                  .map((m) => m.title)
+                  .join("\n")}
                 Also, provide the keyword in order to search for an unplash image related
                 to the category.
                 Put the category name followed by a comma and then the keyword.
@@ -329,8 +335,4 @@ export const submitMessage = async (message: Message) => {
     });
     
   };
-
-  function registrar_clasificacion(){
-    
-  }
 };

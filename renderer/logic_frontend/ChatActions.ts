@@ -38,7 +38,6 @@ export const addChat = (router: NextRouter) => {
 
   router.push(`/chat/${id}`);
 
-  console.log("Alcanzo esta linea de codigo");
 };
 
 export const setActiveChatId = (id: string | undefined) =>
@@ -57,12 +56,53 @@ export const updateMessage = (message: Message) => {
   }));
 };
 
+function pushMessageSystem(message: Message){
+  const chat = getChatById(get().chats, get().activeChatId);
+  if (chat === undefined) {
+    console.error("Chat not found");
+    return;
+  }
+  set((state) => ({
+    chats: updateChatMessages(state.chats, chat.id, (messages) => {
+      return [...messages, message];
+    }),
+  }));
+
+}
+
 export const pushMessage = (message: Message) => {
   const chat = getChatById(get().chats, get().activeChatId);
   if (chat === undefined) {
     console.error("Chat not found");
     return;
   }
+  if(chat.messages.length == 0){
+    pushMessageSystem(
+      {
+        id: uuidv4(),
+        content: `You are Mindy, an AI assistant created by Mindset. You are created
+        to be helpful and very friendly, you are
+        very kind to the user. You ALWAYS will use emojis. 
+        Mindset is a dominican company 
+        that focuses on creating AI solutions for businesses.
+        Mindset was created on 2021. Mindy was created on 2022.
+        The CEO is Kamila Ureña. The CTO is Jorge Baez.`,
+        role: "system",
+        type: "text",
+      },
+    );
+    pushMessageSystem(
+      {
+        id: uuidv4(),
+        content: `DON'T USE FUNCTIONS WHEN THE USER DIDN'T ASK YOU TO DO SO.
+                  The user MUST ASK for the function, don't trigger any function if the user prompt dosen't include any keyword
+                  in the function name.`,
+        role: "system",
+        type: "text",
+      },
+    );
+  }
+  console.log("PUSH MESSAGE", chat.messages);
   set((state) => ({
     chats: updateChatMessages(state.chats, chat.id, (messages) => {
       return [...messages, message];

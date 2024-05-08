@@ -292,6 +292,13 @@
   margin-top: -5em;
 }
 
+.center_horizontally{
+  display: flex;
+  justify-content: center;
+  /*Every element in their own line */
+  flex-wrap: wrap;
+}
+
 .visible{
   display: block;
 }

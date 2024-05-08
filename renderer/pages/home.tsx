@@ -44,9 +44,6 @@ export default function Page(){
     toggleAudio();
 
     const handleKeyDown = (event) => {
-      if(!["k", "l"].includes(event.key)){
-        return;
-      }
       if (event.repeat) {
         return;
       }
@@ -58,21 +55,8 @@ export default function Page(){
         } else if (audioState === "transcribing") {
           return;
         }
-      }else{
-        notifications.show({
-          title: "Action started",
-          message: "Generating document",
-          color: "red",
-        });
-        window.ipc.send('generacion_documentos', "Explain in great detail the history of USA");
-        window.ipc.on('generacion_documentos', (documento: string) => {
-          console.log("Documento generado: ",documento)
-          notifications.show({
-            title: "Action finished",
-            message: "Document generated successfully",
-            color: "green",
-          });
-        });
+      }else if (event.key == "f"){
+        window.ipc.send('create_event_google_calendar', {title : "Titulo", description : "Descripcion", startTime : "2023-12-01", endTime : "2024-01-01"});
       }
     };
     

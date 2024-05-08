@@ -2,16 +2,15 @@ import path from 'path'
 import { app, ipcMain, clipboard,nativeImage } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
-import { chromium, Page } from 'playwright';
+import { chromium } from 'playwright-extra';
+// import { chromium } from 'playwright';
 import os from 'node:os';
 import axios from 'axios';
 import OpenAI from "openai";
 import fs from 'fs';
-import { ElevenLabsClient, play  } from "elevenlabs";
 import { v4 as uuidv4 } from "uuid";
 import { Groq } from "groq-sdk";
-
-var markdownpdf = require("markdown-pdf");
+import { userAgent } from 'next/server';
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -45,34 +44,12 @@ app.on('window-all-closed', () => {
   app.quit()
 })
 
-const automate_6 = async function (text: string){
-  const elevenlabs = new ElevenLabsClient({
-    apiKey: "219171ffe1d5a59c4de9d4701090af89" // Defaults to process.env.ELEVENLABS_API_KEY
-  }) 
-  
-  const audio = await elevenlabs.generate({
-      voice: "mWsaugnzxPXnXHgFS0Iv",
-      text: "Hello, i am omar, the selected voice for mindy today. How can i assist you?",
-      voice_settings: {
-        "stability": 0.45,
-        "similarity_boost": 1
-      }
-  }).then(function (response) {
-    return response;
-    }).catch(function (error) {
-    return error;
-  });;
+ipcMain.on('search_in_internet', async (event, argumentos) => {
 
-  await play(audio).then(function (response) {
-    return response;
-    }).catch(function (error) {
-    return error;
-  });
-} 
+  let busqueda_internet = argumentos.query;
+  console.log("Busqueda en internet: ",argumentos);
 
-const automate_5 = async function (busqueda_internet: string){
-
-  var response = axios.post('https://api.tavily.com/search/', {
+  axios.post('https://api.tavily.com/search/', {
     "api_key": "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",
     "query": busqueda_internet,
     "search_depth": "deep",
@@ -84,79 +61,113 @@ const automate_5 = async function (busqueda_internet: string){
     "exclude_domains": []
   })
   .then(function (response) {
-    return [response.data['answer'], response.data['response_time']];
+    let respuesta = {
+      "status": true,
+      "content": [
+        response.data['answer'],
+        response.data['response_time']
+      ]
+    }
+    event.reply('search_in_internet', respuesta);
   })
   .catch(function (error) {
-    return error;
-  });
-
-  return response;
-
-}
-
-const automate_4 = async function (instruccion: string, nombre_archivo: string){
-  //Buscar en la carpeta de descargas una imagen con un nombre similar al que se le pasa
-  //Si la encuentra, la envia a la api de openai para que genere una descripcion de la imagen
-  //Si no la encuentra, busca en la carpeta de imagenes de windows
-
-  var dirPath = 'C:\\Users\\'+os.userInfo().username+'\\Downloads';
-
-  // Read the directory contents
-  var filesInDir = fs.readdirSync(dirPath);
-
-  var files = filesInDir.filter((fileName) => fileName.includes(nombre_archivo) && (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')));
-
-  if(files.length == 0){
-    dirPath = 'C:\\Users\\'+os.userInfo().username+'\\Pictures';
-
-    // Read the directory contents
-    filesInDir = fs.readdirSync(dirPath);
-
-    files = filesInDir.filter((fileName) => fileName.replaceAll("_","").replaceAll("-","").includes(nombre_archivo.replaceAll("_","").replaceAll("-","")) && (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')));
-
-  }
-
-  if(files.length == 0){
-    return;
-  }
-
-  //read the file
-  const file_buffer  = fs.readFileSync(dirPath+'\\'+files[0]);
-  const contents_in_base64 = file_buffer.toString('base64');
-
-  const openai_client = new OpenAI({apiKey:"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"});
-
-  const response = await openai_client.chat.completions.create({
-    model: "gpt-4-turbo",
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: instruccion },
-          {
-            type: "image_url",
-            image_url: {
-              "url": "data:image/jpeg;base64," + contents_in_base64,
-              "detail": "low"
-            },
-          },
-        ],
-      },
-    ],
-    stream: true
-  });
-
-  for await (const chunk of response) {
-    if(typeof chunk.choices[0].delta.content != "undefined"){
-      console.log(chunk.choices[0].delta.content);
+    let respuesta = {
+      "status": false,
+      "content": "Hubo un error al intentar buscar en internet " + error
     }
-  }
+    event.reply('search_in_internet', respuesta);
+  });
 
-}
+})
 
 
+//PENDIENTEEEE
+ipcMain.on('analyze_image', async (event, argumentos) => {
 
-const automate_2 = async function (termino: string, debe_buscar_imagenes: boolean){
+    console.log("analyze_image", argumentos);
+
+    let nombre_archivo = argumentos.image;
+    let instruccion = argumentos.question;
+
+    var dirPath = path.join(os.homedir(), 'Downloads');
+    
+    // Read the directory contents
+    var filesInDir = fs.readdirSync(dirPath);
+    console.log(filesInDir)
+    
+    var files = filesInDir.filter((fileName) => fileName.replaceAll("_","").replaceAll("-","").toLowerCase().includes(nombre_archivo.toLowerCase().replaceAll("_","").replaceAll("-","")) && (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')));
+    
+    if(files.length == 0){
+      dirPath = path.join(os.homedir(), 'OneDrive/Imágenes');
+      console.log(dirPath);
+    
+      // Read the directory contents
+      filesInDir = fs.readdirSync(dirPath);
+    
+      files = filesInDir.filter((fileName) => fileName.replaceAll("_","").replaceAll("-","").toLowerCase().includes(nombre_archivo.toLowerCase().replaceAll("_","").replaceAll("-","")) && (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')));
+    
+    }
+    
+    if(files.length == 0){
+      let respuesta = {
+        "status": false,
+        "content": "Imagen no encontrada."
+      };
+      event.reply('analyze_image', respuesta);
+      return;
+    }
+    
+    //read the file
+    const file_buffer  = fs.readFileSync(dirPath+'\\'+files[0]);
+    const contents_in_base64 = file_buffer.toString('base64');
+    
+    const openai_client = new OpenAI({apiKey:"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"});
+    
+    const response = await openai_client.chat.completions.create({
+      model: "gpt-4-turbo",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: instruccion },
+            {
+              type: "image_url",
+              image_url: {
+                "url": "data:image/jpeg;base64," + contents_in_base64,
+                "detail": "low"
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    var respuesta;
+    
+    if(typeof response.choices[0].message.content != "undefined"){
+      respuesta = {
+        "status": true,
+        "content": [
+          response.choices[0].message.content,
+          dirPath+'\\'+files[0]
+        ]
+      }
+    }else{
+      respuesta = {
+        "status": false,
+        "content": "No se pudo analizar la imagen"
+      }
+    }
+
+    event.reply('analyze_image', respuesta);
+
+});
+
+ipcMain.on('create_note', async (event, argumentos) => {
+
+  var termino = argumentos.term;
+  var debe_buscar_imagenes = (argumentos.search_for_images) ? argumentos.search_for_images : true;
+
   const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Local\\Google\\Chrome\\User Data';
   const profileDirectory = 'Default';
 
@@ -228,11 +239,24 @@ const automate_2 = async function (termino: string, debe_buscar_imagenes: boolea
     await page.waitForTimeout(3000);
   }
 
+  const stealth = require('puppeteer-extra-plugin-stealth')()
+
+  // Add the plugin to playwright (any number of plugins can be added)
+  await chromium.use(stealth)
+
   const browser = await chromium.launchPersistentContext(
     userDataDir, 
     {
       headless: false, // Adjust as needed
-      args: [`--profile-directory=${profileDirectory}`]
+      //Stay undetected by google
+      args: ['--profile-directory='+profileDirectory, '--start-maximized', '--disable-blink-features=AutomationControlled',"--disable-notifications",
+      "--disable-gpu",
+      "--disable-setuid-sandbox",
+      "--deterministic-fetch",
+      "--disable-features=IsolateOrigins,site-per-process",
+      "--disable-site-isolation-trials",
+      "--disable-web-security",
+      '--disable-component-extensions-with-background-pages' ]
     }
   );
 
@@ -293,66 +317,160 @@ const automate_2 = async function (termino: string, debe_buscar_imagenes: boolea
    });
   }
 
+  let respuesta = {
+    "status": false,
+    "content": "Error while trying to create note"
+  }
+
   if(output.length > 0){
     await crear_nota(termino, output, img).then(() => {
+      respuesta = {
+        "status": true,
+        "content": "Note created successfully"
+      }
    }).catch((e) => {
-   });
+      respuesta.content += ": " + e;
+    });
   }
-
+  
   browser.close();
-}
+  event.reply('create_note', respuesta);
+})
 
-const automate = async function (){
+ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
+
+    const title = argumentos.title;
+    const description = argumentos.description;
+    const startTime = argumentos.startTime;
+    const endTime = argumentos.endTime;
+    
+    const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Local\\Google\\Chrome\\User Data';
+    const profileDirectory = 'Default';
+
+    async function createEvent(title: string, description: string, startTime: string, endTime: string) {
+
+      const stealth = require('puppeteer-extra-plugin-stealth')()
+
+      // Add the plugin to playwright (any number of plugins can be added)
+      await chromium.use(stealth)
+  
+      const browser = await chromium.launchPersistentContext(
+        userDataDir, 
+        {
+          headless: false, // Adjust as needed
+          //'--disable-features=IsolateOrigins', '--disable-features=site-per-process', '--disable-features=CrossSiteDocumentBlockingIfIsolating', '--disable-features=CrossSiteDocumentBlockingAlways'
+          args: [`--profile-directory=${profileDirectory}`, '--start-maximized', '--disable-blink-features=AutomationControlled',"--disable-notifications",
+          "--disable-gpu",
+          "--disable-setuid-sandbox",
+          "--deterministic-fetch",
+          "--disable-features=IsolateOrigins,site-per-process",
+          "--disable-site-isolation-trials",
+          "--disable-web-security",
+          '--disable-component-extensions-with-background-pages']
+        }
+      );
+    
+      const page = await browser.newPage();
+    
+      await page.goto('https://calendar.google.com');
+
+      const createButton = await page.waitForSelector('[data-is-column-view-context="true"]');
+      await createButton.click();
+      await page.waitForTimeout(2000);
+
+      const titleInput = await page.locator("[isfullscreen='false'] input[type='text']").first();
+      await titleInput.fill(title);
+
+      await page.waitForTimeout(2000);
+
+      var descriptionInput = await page.locator("[isfullscreen='false'] [data-key='description']");
+      await descriptionInput.click();
+      descriptionInput = await page.locator("[isfullscreen='false'] [contenteditable='true']");
+      await descriptionInput.fill(description);
+
+      await page.waitForTimeout(2000);
+
+      var startDateInput = await page.locator("[isfullscreen='false'] [data-key='startDate']").nth(0);
+      await startDateInput.click();
+      startDateInput = await page.locator("[isfullscreen='false'] input[type='text']");
+      await startDateInput.nth(1).fill(startTime);
+
+      await page.waitForTimeout(2000);
+
+      const end_input = await page.locator("[isfullscreen='false'] input[type='text']");
+      await end_input.nth(4).fill(endTime);
+
+      await page.waitForTimeout(2000);
+
+      const saveButton = await page.locator('[isfullscreen="false"] button').nth(28);
+      await saveButton.click();
+      await page.waitForTimeout(3000);
+
+      browser.close();
+
+    }
+
+    let respuesta = {
+      "status": false,
+      "content": "Error while trying to create event"
+    }
+
+    createEvent(title, description, startTime, endTime).then(() => {
+
+      respuesta = {
+        "status": true,
+        "content": "Event created succesfully: "+title
+      }
+      
+      event.reply('create_event_google_calendar', respuesta);
+
+    }).catch((e) => {
+      respuesta.content += ": " + e;
+      event.reply('create_event_google_calendar', respuesta);
+    });
+});
+
+ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
+
+  const title = argumentos.title;
+  const description = (argumentos.description) ? argumentos.description : "";
+  const dueDate = argumentos.dueDate;
+
   const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Local\\Google\\Chrome\\User Data';
+  console.log("os.userInfo().username", os.userInfo().username);
   const profileDirectory = 'Default';
 
-  const browser = await chromium.launchPersistentContext(
-    userDataDir, 
-    {
-      headless: false, // Adjust as needed
-      args: [`--profile-directory=${profileDirectory}`]
-    }
-  );
-
-  const page = await browser.newPage();
-
-  await page.goto('https://calendar.google.com');
-
-  async function createEvent(title: string, description: string, startTime: string, endTime: string) {
-    const createButton = await page.waitForSelector('[data-is-column-view-context="true"]');
-    await createButton.click();
-    await page.waitForTimeout(2000);
-
-    const titleInput = await page.locator("[isfullscreen='false'] input[type='text']").first();
-    await titleInput.fill(title);
-
-    await page.waitForTimeout(2000);
-
-    var descriptionInput = await page.locator("[isfullscreen='false'] [data-key='description']");
-    await descriptionInput.click();
-    descriptionInput = await page.locator("[isfullscreen='false'] [contenteditable='true']");
-    await descriptionInput.fill(description);
-
-    await page.waitForTimeout(2000);
-
-    var startDateInput = await page.locator("[isfullscreen='false'] [data-key='startDate']").nth(0);
-    await startDateInput.click();
-    startDateInput = await page.locator("[isfullscreen='false'] input[type='text']");
-    await startDateInput.nth(1).fill(startTime);
-
-    await page.waitForTimeout(2000);
-
-    const end_input = await page.locator("[isfullscreen='false'] input[type='text']");
-    await end_input.nth(4).fill(endTime);
-
-    await page.waitForTimeout(2000);
-
-    const saveButton = await page.locator('[isfullscreen="false"] button').nth(28);
-    await saveButton.click();
-    await page.waitForTimeout(3000);
-  }
-
   async function createTask(title: string, description: string, dueDate: string){
+
+    const stealth = require('puppeteer-extra-plugin-stealth')()
+
+    // Add the plugin to playwright (any number of plugins can be added)
+    await chromium.use(stealth)
+
+    const browser = await chromium.launchPersistentContext(
+      userDataDir, 
+      {
+        headless: false, // Adjust as needed
+        args: [`--profile-directory=${profileDirectory}`, '--start-maximized', '--disable-blink-features=AutomationControlled',"--disable-notifications",
+        "--disable-gpu",
+        "--disable-setuid-sandbox",
+        "--deterministic-fetch",
+        "--disable-features=IsolateOrigins,site-per-process",
+        "--disable-site-isolation-trials",
+        "--disable-web-security",
+        '--disable-component-extensions-with-background-pages'],
+      },
+    );
+    
+    //add init script
+    await browser.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+  
+    const page = await browser.newPage();
+
+    await page.waitForTimeout(4000);
+  
+    await page.goto('https://calendar.google.com');
+
     const createButton = await page.locator('[data-is-column-view-context="true"]');
     await createButton.click();
 
@@ -369,7 +487,7 @@ const automate = async function (){
     await page.waitForTimeout(2000);
 
     var fecha_cierre = await page.locator('[isfullscreen="false"] button')
-    await fecha_cierre.nth(21).click();
+    await fecha_cierre.nth(22).click();
 
     await page.waitForTimeout(2000);
 
@@ -384,37 +502,27 @@ const automate = async function (){
     await page.waitForTimeout(2000);
     
     const save_button = await page.locator('[isfullscreen="false"] button');
-    save_button.nth(28).click();
+    save_button.nth(35).click();
 
     await page.waitForTimeout(3000);
+    browser.close();
   }
 
-  createEvent("Elison Perez", "Miren", "2024-02-26 10:00 PM", "2024-02-26 11:00 PM").then(() => {
- }).catch((e) => {
+  createTask(title, description,dueDate).then(() => {
+    let respuesta = {
+      "status": true,
+      "content": "Task created succesfully: "+title
+    }
+    event.reply('create_task_google_calendar', respuesta);
+  }).catch((e) => {
+    let respuesta = {
+      "status": false,
+      "content": "Error while trying to create task: "+e
+    }
+    event.reply('create_task_google_calendar', respuesta);
  })
-  browser.close();
-}
-
-ipcMain.on('message', async (event, arg) => {
-
-  let prompt = `
-      Realiza un documento que hable sobre el siguiente tema, desde la perspectiva de una banca de loteria
-      que es una microempresa, llamada "Lotenal".
-
-      ⦁	Investigación Inicial:
-        ⦁	Realizar una investigación sobre las necesidades específicas de esa microempresa en términos de presencia en línea.
-        ⦁	Identificar las características clave que el sitio web debe incluir (por ejemplo, catálogo de productos, horarios de atención, formularios de contacto).
-
-  `
  
-  automate_3(prompt, "escuela").then(() => {
-    
- }).catch((e) => {
-    console.log('258 handle error here: ', e.message)
- })
-   
-  event.reply('message', `Accion completada`);
-}) 
+});
 
 ipcMain.on('download_request', async (event, args) => {
   console.log("download request!")
@@ -450,21 +558,46 @@ ipcMain.on('download_request', async (event, args) => {
 })
 
 
-ipcMain.on('generacion_imagenes', async (event, prompt) => {
+ipcMain.on('generate_image', async (event, argumentos) => {
+
+  console.log("Generate_images", argumentos);
+
+  let prompt = argumentos.prompt;
+  let number = (argumentos.number) ? argumentos.number : 1;
+  
 
   const openai = new OpenAI({apiKey:"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"});
-  const image = await openai.images.generate({ model: "dall-e-2", n: 2 , prompt });
+  const image = await openai.images.generate({ model: (number == 1) ? "dall-e-3" : "dall-e-2", n: number , prompt });
 
   const images = [];
 
-  for(let i = 0; i < image.data.length; i++){
-    images.push(image.data[i].url);
+  let respuesta = {
+    "status": false,
+    "content": [
+      "Error while trying to generate image(s)",
+      []
+    ]
   }
 
-  event.reply('generacion_imagenes', images);
+  if(typeof image.data.length !== "undefined" && image.data.length > 0){
+    for(let i = 0; i < image.data.length; i++){
+      images.push(image.data[i].url);
+    }
+    respuesta = {
+      "status": true,
+      "content": [
+        "Image(s) generated succesfully",
+        images
+      ]
+    }
+  }
+
+  event.reply('generate_image', respuesta);
 })
 
-ipcMain.on('generacion_documentos', async (event, tema) => {
+ipcMain.on('generacion_documentos', async (event, argumentos) => {
+
+  var tema = argumentos.subject;
 
   var texto_completo = "";
   async function generar_contenido(subtema: string){
@@ -523,24 +656,26 @@ ipcMain.on('generacion_documentos', async (event, tema) => {
   var args, callback;
   
   // Arguments can be either a single string:
-  args = '-f markdown -t pdf -o ./tema.pdf --toc=true';
+  args = '-f markdown -t pdf -o '+output_path+' --toc=true';
+
+  let respuesta = {
+    "status": true,
+    "content": "Document created succesfully"
+  }
   
   // Set your callback function
-  callback = function (err, result) {
+  callback = function (err) {
   
-    if (err) {
-      console.error('Oh Nos: ',err);
+    respuesta = {
+      "status": false,
+      "content": "Error while trying to generate document: " + err
     }
-  
-    // For output to files, the 'result' will be a boolean 'true'.
-    // Otherwise, the converted value will be returned.
-    console.log(result);
-    return result;
+    
   };
   
   // Call pandoc
   nodePandoc(texto_completo, args, callback);
-  event.reply('generacion_documentos', tema);
+  event.reply('generacion_documentos', respuesta);
 })
 
 ipcMain.on('eliminar_todas_imagenes_clasificacion', async (event) => {
@@ -560,4 +695,4 @@ ipcMain.on('eliminar_todas_imagenes_clasificacion', async (event) => {
   );
 
   event.reply('eliminar_todas_imagenes_clasificacion', "All data classifications removed");
-});
+}); 
