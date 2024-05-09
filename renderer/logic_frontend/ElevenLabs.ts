@@ -39,7 +39,6 @@ export const genAudio = async ({
   voice?: string;
   style?: string;
 }): Promise<string | undefined> => {
-  return;
   try {
     const response = await fetch(`${BASE_URL}/text-to-speech/${voice}`, {
       method: "POST",

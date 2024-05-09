@@ -30,14 +30,11 @@ interface VarsShape {
 const getVars = (): VarsShape => {
   const state = get();
 
-  set({ modelChoiceTTS: "openai" });
-  // set({ modelChoiceTTS: "11labs" });
-
   switch (state.modelChoiceTTS) {
     case '11labs':
       return {
         apiKey: state.apiKey11Labs,
-        voiceId: "mWsaugnzxPXnXHgFS0Iv",
+        voiceId: state.voice11labsID || DEFAULT_11LABS_VOICE,
         genAudio: genAudio11Labs,
       };
     case 'openai':
@@ -188,31 +185,30 @@ const fetchAudio = async (idx: number) => {
     return;
   }
 
-  // set({ playerApiState: "loading" });
+  set({ playerApiState: "loading" });
 
-  // 4k
-  // try {
-  //   const audioURL = await genAudio({
-  //     text: chunk.text,
-  //     key: apiKey,
-  //     region: apiKeyRegion,
-  //     voice: voiceId,
-  //     model,
-  //     style: voiceStyle,
-  //   });
-  //   if (audioURL) {
-  //     set({
-  //       playerAudioQueue: playerAudioQueue.map((chunk, i) =>
-  //         i === idx ? { ...chunk, blobURL: audioURL, state: "audio" } : chunk
-  //       ),
-  //     });
-  //     if (get().playerState === "idle") {
-  //       playAudio(idx);
-  //     }
-  //   }
-  // } catch (error) {
-  //   console.error(error);
-  // }
+  try {
+    const audioURL = await genAudio({
+      text: chunk.text,
+      key: apiKey,
+      region: apiKeyRegion,
+      voice: voiceId,
+      model,
+      style: voiceStyle,
+    });
+    if (audioURL) {
+      set({
+        playerAudioQueue: playerAudioQueue.map((chunk, i) =>
+          i === idx ? { ...chunk, blobURL: audioURL, state: "audio" } : chunk
+        ),
+      });
+      if (get().playerState === "idle") {
+        playAudio(idx);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
 
   set({ playerApiState: "idle" });
 };

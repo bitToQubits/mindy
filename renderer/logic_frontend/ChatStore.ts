@@ -28,6 +28,7 @@ export const excludeFromState = [
   "playerRef",
   "playerRefInit",
   "playerState",
+  "voice11labsID",
   "playerAudioQueue",
   "playerIdx",
 ];
@@ -129,11 +130,12 @@ export interface ChatState {
   playerState: "playing" | "paused" | "idle";
   playerApiState: APIState;
   playerAudioQueue: AudioChunk[];
+  voice11labsID: string | undefined;
 
   showTextDuringPTT: boolean;
   autoSendStreamingSTT: boolean;
   modelChoicesChat: string[] | undefined;
-  modelChoiceTTS: string | "11labs";
+  modelChoiceTTS: string | "openai";
   // modelChoiceTTS: string | "openai";
   modelChoiceSTT: string | "whisper";
   textInputValue: string;
@@ -174,12 +176,13 @@ export const initialState = {
   playerIdx: -1,
   playerState: "idle",
   playerApiState: "idle",
+  voice11labsID: undefined,
   playerAudioQueue: [],
 
   autoSendStreamingSTT: true,
   modelChoicesChat: undefined,
   modelChoiceChat: undefined,
-  modelChoiceTTS: "11labs",
+  modelChoiceTTS: "openai",
   // modelChoiceTTS: "openai",
   modelChoiceSTT: "whisper",
   textInputValue: "",

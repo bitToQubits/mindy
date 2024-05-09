@@ -959,7 +959,106 @@ export async function streamCompletion(
             });
             break;
           case "change_voice":
-            window.ipc.send('change_voice', sum);
+            let voice = sum.voice_name;
+            switch(voice){
+
+              case "Default":
+                set({ modelChoiceTTS: "openai" });
+                notifications.show({
+                  title: "Action completed",
+                  message: "Voice changed to Default",
+                  color: "green",
+                });
+                break;
+
+              case "Omar":
+                set({ modelChoiceTTS: "11labs" });
+                set({ voice11labsID : "mWsaugnzxPXnXHgFS0Iv" });
+                notifications.show({
+                  title: "Action completed",
+                  message: "Voice changed to Omar",
+                  color: "green",
+                });
+                break;
+
+              case "Dulce":
+                set({ modelChoiceTTS: "11labs" });
+                set({ voice11labsID : "5BlVKZXFbEFHO9qtqbqV" });
+                notifications.show({
+                  title: "Action completed",
+                  message: "Voice changed to Dulce",
+                  color: "green",
+                });
+                break;
+
+              case "Brito":
+                set({ modelChoiceTTS: "11labs" });
+                set({ voice11labsID : "lGnrHs17v3wzSacPJaBD" });
+                notifications.show({
+                  title: "Action completed",
+                  message: "Voice changed to Brito",
+                  color: "green",
+                });
+                break;
+
+              case "Xiomara":
+                set({ modelChoiceTTS: "11labs" });
+                set({ voice11labsID : "vsSAWGQXIAyGGIWsTWe8" });
+                notifications.show({
+                  title: "Action completed",
+                  message: "Voice changed to Xiomara",
+                  color: "green",
+                });
+                break;
+
+              case "Paola":
+                set({ modelChoiceTTS: "11labs" });
+                set({ voice11labsID : "N9wDvGReKSu2Fr9DIhBu" });
+                notifications.show({
+                  title: "Action completed",
+                  message: "Voice changed to Paola",
+                  color: "green",
+                });
+                break;
+
+              case "Jose Miguel":
+                set({ modelChoiceTTS: "11labs" });
+                set({ voice11labsID : "6kgh5Nijgb080zfqh8Ij" });
+                notifications.show({
+                  title: "Action completed",
+                  message: "Voice changed to Jose Miguel",
+                  color: "green",
+                });
+                break;
+
+              case "Zeneyda":
+                set({ modelChoiceTTS: "11labs" });
+                set({ voice11labsID : "t0NNUd4jJmIkKtSxV2qY" });
+                notifications.show({
+                  title: "Action completed",
+                  message: "Voice changed to Zeneyda",
+                  color: "green",
+                });
+                break;
+
+              case "Dyango":
+                set({ modelChoiceTTS: "11labs" });
+                set({ voice11labsID : "w8J9n2J9QvI2jBb6u1Uk" });
+                notifications.show({
+                  title: "Action completed",
+                  message: "Voice changed to Dyango",
+                  color: "green",
+                });
+                break;
+
+
+              default:
+                notifications.show({
+                  title: "Error",
+                  message: "Voice not founded",
+                  color: "green",
+                });
+            }
             break;
 
           case "go_to_your_mind_palace":
@@ -1027,8 +1126,7 @@ export async function genAudio({
   voice?: string;
   model?: string;
 }): Promise<string | null> {
-  // //4k
-  return;
+  //4k
   if (!voice || !model) {
     throw new Error("Missing voice or model");
   }
