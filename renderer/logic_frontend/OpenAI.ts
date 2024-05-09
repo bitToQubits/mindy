@@ -1063,7 +1063,11 @@ export async function streamCompletion(
 
           case "go_to_your_mind_palace":
             window.ipc.send('go_to_your_mind_palace', sum);
+            window.ipc.on('go_to_your_mind_palace', () => {
+              window.ipc.off('go_to_your_mind_palace');
+            });
             break;
+
         }
 
       }

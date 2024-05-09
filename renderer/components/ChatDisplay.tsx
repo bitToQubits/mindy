@@ -26,10 +26,6 @@ const ChatDisplay = () => {
   var actionRunning = useChatStore((state) => state.actionRunning);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  window.ipc.on('go_to_your_mind_palace', (event) => {
-    router.push('/bankKnowledge');
-  });
-
   useEffect(() => {
     setIsHydrated(true);
     setActiveChatId(activeChatId as string | undefined);
@@ -395,6 +391,11 @@ const ChatDisplay = () => {
 
       window.addEventListener('resize', recalculo_esferico);
     }
+
+    window?.ipc.on('go_to_your_mind_palace', (event) => {
+      router.push('/bankKnowledge');
+      window?.ipc.off('go_to_your_mind_palace');
+    });
 
   }, [isHydrated]);
 
