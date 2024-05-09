@@ -7,6 +7,7 @@ import axios from "axios";
 import { notifications } from "@mantine/notifications";
 import { useChatStore } from "./ChatStore";
 import { v4 as uuidv4 } from "uuid";
+import { submitMessage } from "./SubmitMessage";
 
 export function assertIsError(e: any): asserts e is Error {
   if (!(e instanceof Error)) {
@@ -144,6 +145,13 @@ export async function streamCompletion(
     {
       type: "function",
       function: {
+        name: "go_to_your_mind_palace",
+        description: "Go to your mind palace. When the user asks to go to the mind palace, or say show me your brain, execute this function.",
+      },
+    },
+    {
+      type: "function",
+      function: {
         name: "generate_image",
         description: "Generate images from text. Example: a cat on a couch. Infer this from the user prompt. ",
         parameters: {
@@ -167,7 +175,7 @@ export async function streamCompletion(
       type: "function",
       function: {
         name: "create_event_google_calendar",
-        description: "Create events in google calendar. ",
+        description: "Create events in google calendar.",
         parameters: {
           type: "object",
           properties: {
@@ -196,7 +204,7 @@ export async function streamCompletion(
       type: "function",
       function: {
         name: "create_task_google_calendar",
-        description: "Create tasks in google calendar. ",
+        description: "Create tasks in google calendar. When user asks to create a task, execute this function.",
         parameters: {
           type: "object",
           properties: {
@@ -279,8 +287,8 @@ export async function streamCompletion(
     {
       type: "function",
       function: {
-        name: "analyze_image",
-        description: "Analyze image input and process it using prompt for user. ",
+        name: "search_and_analyze_image",
+        description: "Search for a file in the computer and then analyze image input and process it using prompt for user. When the users requests searching for a file in the computer, execute this function. You only need the name of the image, and the question. Execute this function inmediatly if the user requests it.",
         parameters: {
           type: "object",
           properties: {
@@ -414,7 +422,15 @@ export async function streamCompletion(
               color: "red",
             });
 
+            set((state) => ({
+              actionRunning: true,
+            })); 
+
             window.ipc.on('generate_image', (respuesta) => {
+
+              set((state) => ({
+                actionRunning: false,
+              }));
 
               if(respuesta['status'] == true){
 
@@ -462,6 +478,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = "Error while trying to create some images.";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "Error while trying to create some images.",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -489,7 +513,15 @@ export async function streamCompletion(
               color: "red",
             });
 
+            set((state) => ({
+              actionRunning: true,
+            }));
+
             window.ipc.on('create_event_google_calendar', (respuesta) => {
+
+              set((state) => ({
+                actionRunning: false,
+              }));
 
               if(respuesta['status'] == true){
                 notifications.show({
@@ -507,6 +539,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = respuesta['content'];
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: respuesta['content'],
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -529,6 +569,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = "Error while trying to create a Google Event";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "Error while trying to create a Google Event",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -550,7 +598,15 @@ export async function streamCompletion(
               color: "red",
             });
 
+            set((state) => ({
+              actionRunning: true,
+            }));
+
             window.ipc.on('create_task_google_calendar', (respuesta) => {
+
+              set((state) => ({
+                actionRunning: false,
+              }));
 
               if(respuesta['status'] == true){
                 notifications.show({
@@ -568,6 +624,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = respuesta['content'];
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: respuesta['content'],
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -590,6 +654,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = "Error while trying to create a Google Task";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "Error while trying to create a Google Task",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -611,7 +683,15 @@ export async function streamCompletion(
               color: "red",
             });
 
+            set((state) => ({
+              actionRunning: true,
+            }));
+
             window.ipc.on('create_documents', (respuesta) => {
+
+              set((state) => ({
+                actionRunning: false,
+              }));
 
               if(respuesta['status'] == true){
                 notifications.show({
@@ -629,6 +709,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = "Document created successfully";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "Document created successfully",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -651,6 +739,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = "Error while trying to create a document";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "Error while trying to create a document",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -671,8 +767,16 @@ export async function streamCompletion(
               message: "Creating note from source",
               color: "red",
             });
+
+            set((state) => ({
+              actionRunning: true,
+            }));
             
             window.ipc.on('create_note', (respuesta) => {
+
+              set((state) => ({
+                actionRunning: false,
+              }));
 
               if(respuesta['status'] == true){
                 notifications.show({
@@ -690,6 +794,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = "Note created successfully";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "Note created successfully",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -712,6 +824,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = "Error while trying to create a note";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "Error while trying to create a note",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -733,7 +853,15 @@ export async function streamCompletion(
               color: "red",
             });
 
+            set((state) => ({
+              actionRunning: true,
+            }));
+
             window.ipc.on('search_in_internet', (respuesta) => {
+
+              set((state) => ({
+                actionRunning: false,
+              }));
 
               if(respuesta['status'] == true){
                 notifications.show({
@@ -751,6 +879,14 @@ export async function streamCompletion(
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                           c.messages[messages.length -1].content = respuesta['content'][0];
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: respuesta['content'][0],
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
@@ -768,31 +904,50 @@ export async function streamCompletion(
             });
 
             break;
-          case "analyze_image":
-            window.ipc.send('analyze_image', sum);
-            window.ipc.on('analyze_image', (respuesta) => {
+          case "search_and_analyze_image":
+            window.ipc.send('search_and_analyze_image', sum);
+            window.ipc.on('search_and_analyze_image', (respuesta) => {
               if(respuesta['status'] == true){
-                notifications.show({
-                  title: "Action completed",
-                  message: "Image analyzed successfully",
-                  color: "green",
-                });
-
                 //Obtener el ultimo mensaje del chat y adjuntarle la respuesta
                 const activeChatId = get().activeChatId;
                 set((state) => ({
-                  ttsText: (state.ttsText || "") + respuesta['content'],
+                  ttsText: (state.ttsText || "") + "Image searched on the computer successfully",
                   chats: state.chats.map((c) => {
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = respuesta['content'];
+                          c.messages[messages.length -1].content = "Image searched on the computer successfully";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "Image searched on the computer successfully",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
                         }
                       }
                     }
                     return c;
                   }),
                 }));
+
+                submitMessage({
+                  id: uuidv4(),
+                  content:
+                    [
+                      { type: "text", text:  sum.question},
+                      {
+                        type: "image_url",
+                        image_url: {
+                          "url": "data:image/jpeg;base64," + respuesta['content'],
+                          "detail": "low"
+                        },
+                      },
+                    ],
+                  role: "user",
+                  type: "text_image"
+                });
               }else{
                 notifications.show({
                   title: "Error",
@@ -805,6 +960,10 @@ export async function streamCompletion(
             break;
           case "change_voice":
             window.ipc.send('change_voice', sum);
+            break;
+
+          case "go_to_your_mind_palace":
+            window.ipc.send('go_to_your_mind_palace', sum);
             break;
         }
 

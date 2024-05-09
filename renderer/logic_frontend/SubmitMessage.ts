@@ -22,9 +22,17 @@ export const abortCurrentRequest = () => {
 
 export const submitMessage = async (message: Message) => {
   // If message is empty, do nothing
-  if (message.content.trim() === "") {
-    console.error("Message is empty");
-    return;
+
+  if(message.type == "text_image"){
+    if (message.content[0].text.trim() === "") {
+      console.error("Message is empty");
+      return;
+    }    
+  }else{    
+    if (message.content.trim() === "") {
+      console.error("Message is empty");
+      return;
+    }
   }
 
   const activeChatId = get().activeChatId;
@@ -98,7 +106,10 @@ export const submitMessage = async (message: Message) => {
       }),
     }));
   };
-  const settings = get().settingsForm;
+
+  var settings = get().settingsForm;
+
+  settings.model = "gpt-4-turbo";
 
   const abortController = new AbortController();
   set((state) => ({
@@ -144,6 +155,13 @@ export const submitMessage = async (message: Message) => {
       if (get().settingsForm.auto_title) {
         findChatTitle();
       }
+      if(message.type == "text_image"){
+        notifications.show({
+          title: "Action completed",
+          message: "Image analyzed successfully",
+          color: "green",
+        });
+      }
     },
     (errorRes, errorBody) => {
       let message = errorBody;
@@ -167,9 +185,10 @@ export const submitMessage = async (message: Message) => {
       return;
     }
     // Find a good title for the chat
-    const numWords = chat.messages
-      .map((m) => m.content.split(" ").length)
+      const numWords = chat.messages
+      .map((m) => (m.type == "image") ? "".split(" ").length : (m.type == "text_image") ? m.content[0].text.split(" ").length : m.content.split(" ").length )
       .reduce((a, b) => a + b, 0);
+
     if (
       chat.messages.length > 3 &&
       chat.title === undefined &&
@@ -182,7 +201,7 @@ export const submitMessage = async (message: Message) => {
               >>>
               ${chat.messages
                 .slice(2)
-                .map((m) => m.content)
+                .map((m) => (m.type == "image") ? "" : (m.type == "text_image") ? m.content[0].text : m.content )
                 .join("\n")}
               >>>
                 `,

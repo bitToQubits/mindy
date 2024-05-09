@@ -4,9 +4,9 @@ export const countTokens = (text: string) => encoder.encode(text).length;
 
 export interface Message {
   id: string;
-  content: string;
+  content: any;
   role: "user" | "assistant" | "system";
-  type: "text" | "image";
+  type: "text" | "image" | "text_image";
   loading?: boolean;
 }
 
@@ -41,10 +41,21 @@ export function truncateMessages(
     startIdx = 1;
   }
 
+  if (messages[1].role === "system") {
+    accumulatedTokens = estimateTokens(messages[1].content);
+    ret.push(messages[1]);
+    startIdx = 2;
+  }
+
   // Try to truncate messages as is
   for (let i = messages.length - 1; i >= startIdx; i--) {
     const message = messages[i];
-    const tokens = estimateTokens(message.content);
+    var tokens;
+    if(message.type == "text_image"){
+      tokens = estimateTokens(message.content[0].text);
+    }else{
+      tokens = estimateTokens(message.content);
+    }
     if (accumulatedTokens + tokens > targetTokens) {
       break;
     }

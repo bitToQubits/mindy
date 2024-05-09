@@ -1,6 +1,9 @@
 /* eslint-disable react/display-name */
 /* eslint-disable import/no-anonymous-default-export */
 import type { Message } from "../logic_frontend/Message";
+import{
+Image
+} from "@mantine/core";
 
 import Markdown from "markdown-to-jsx";
 
@@ -113,10 +116,18 @@ const useStyles = createStyles((theme: MantineTheme) => ({
 export default ({ message, className }: Props) => {
   const { classes, cx } = useStyles();
 
+  let content = "";
+
+  if(message.type === "text_image"){
+    content = message.content[0].text;
+  }else{
+    content = message.content;
+  }
+
   const renderMessage = () => {
-    const codeTags = (message.content.match(/```/g) || []).length;
+    const codeTags = (content.match(/```/g) || []).length;
     // Add a closing code tag if there is an odd number of code tags
-    return codeTags % 2 === 0 ? message.content : message.content + "```";
+    return codeTags % 2 === 0 ? content : content + "```";
   };
 
   return (
@@ -134,6 +145,10 @@ export default ({ message, className }: Props) => {
         >
           {renderMessage()}
         </Markdown>
+        {
+          message.type === "text_image" && 
+          <Image src={message.content[1].image_url.url} mt="1em" alt={message.id} />
+        }
       </div>
     </div>
   );

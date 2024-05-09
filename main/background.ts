@@ -2,7 +2,7 @@ import path from 'path'
 import { app, ipcMain, clipboard,nativeImage } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
-import { chromium } from 'playwright-extra';
+import { chromium, firefox } from 'playwright-extra';
 // import { chromium } from 'playwright';
 import os from 'node:os';
 import axios from 'axios';
@@ -10,7 +10,6 @@ import OpenAI from "openai";
 import fs from 'fs';
 import { v4 as uuidv4 } from "uuid";
 import { Groq } from "groq-sdk";
-import { userAgent } from 'next/server';
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -73,7 +72,7 @@ ipcMain.on('search_in_internet', async (event, argumentos) => {
   .catch(function (error) {
     let respuesta = {
       "status": false,
-      "content": "Hubo un error al intentar buscar en internet " + error
+      "content": "Error while trying to search in internet: " + error
     }
     event.reply('search_in_internet', respuesta);
   });
@@ -82,12 +81,11 @@ ipcMain.on('search_in_internet', async (event, argumentos) => {
 
 
 //PENDIENTEEEE
-ipcMain.on('analyze_image', async (event, argumentos) => {
+ipcMain.on('search_and_analyze_image', async (event, argumentos) => {
 
-    console.log("analyze_image", argumentos);
+    console.log("search_and_analyze_image", argumentos);
 
     let nombre_archivo = argumentos.image;
-    let instruccion = argumentos.question;
 
     var dirPath = path.join(os.homedir(), 'Downloads');
     
@@ -109,6 +107,7 @@ ipcMain.on('analyze_image', async (event, argumentos) => {
     }
     
     if(files.length == 0){
+      console.log("Entra aquii 110")
       let respuesta = {
         "status": false,
         "content": "Imagen no encontrada."
@@ -120,46 +119,14 @@ ipcMain.on('analyze_image', async (event, argumentos) => {
     //read the file
     const file_buffer  = fs.readFileSync(dirPath+'\\'+files[0]);
     const contents_in_base64 = file_buffer.toString('base64');
-    
-    const openai_client = new OpenAI({apiKey:"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"});
-    
-    const response = await openai_client.chat.completions.create({
-      model: "gpt-4-turbo",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: instruccion },
-            {
-              type: "image_url",
-              image_url: {
-                "url": "data:image/jpeg;base64," + contents_in_base64,
-                "detail": "low"
-              },
-            },
-          ],
-        },
-      ],
-    });
 
-    var respuesta;
-    
-    if(typeof response.choices[0].message.content != "undefined"){
-      respuesta = {
-        "status": true,
-        "content": [
-          response.choices[0].message.content,
-          dirPath+'\\'+files[0]
-        ]
-      }
-    }else{
-      respuesta = {
-        "status": false,
-        "content": "No se pudo analizar la imagen"
-      }
-    }
+    console.log("Entra aquii 123")
+    let respuesta = {
+      "status": true,
+      "content": contents_in_base64
+    };
 
-    event.reply('analyze_image', respuesta);
+    event.reply('search_and_analyze_image', respuesta);
 
 });
 
@@ -168,24 +135,56 @@ ipcMain.on('create_note', async (event, argumentos) => {
   var termino = argumentos.term;
   var debe_buscar_imagenes = (argumentos.search_for_images) ? argumentos.search_for_images : true;
 
-  const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Local\\Google\\Chrome\\User Data';
-  const profileDirectory = 'Default';
+  const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\dhq95odj.default-default';
 
   async function buscar_imagenes(termino){
-    var url_busqueda = `https://www.google.com/search?q=${termino}&tbm=isch`
-    await page.goto(url_busqueda)
 
-    var imgs = page.locator("h3 g-img img");
+    var unplash = axios.get('https://api.unsplash.com/search/photos', {
+      params: {
+        query: termino,
+        per_page: 1,
+        page: 1,
+      },
+      headers: {
+        'Authorization': `Client-ID Pshk--FgfWEn_Kjz8iY-pbb72Ux9P94QFA0auXpfbZo`
+      }
+    })
+    .then(function (response) {
 
-    await imgs.nth(1).click()
-    var img_url_element = await page.locator('.iPVvYb');
-    var img_url = await img_url_element.getAttribute("src");
+      var img_url = response.data.results[0].urls.regular;
 
-    return img_url;
+      return img_url;
+
+    }).catch(function (error) {
+      return "";
+    });
+
+    return unplash;
   }
 
   async function crear_nota(titulo: string, output: string, img: string){
-    await page.goto("https://keep.google.com/")
+    await page.goto("https://keep.google.com/");
+
+    if(await page.getByText('Usar otra cuenta').isVisible()){
+
+      await page.getByText('Usar otra cuenta').click();
+      await page.locator('[type="email"]').fill("testeomindy@gmail.com");
+      await page.locator('[type="email"]').press('Enter');
+
+      await page.waitForTimeout(4000);
+  
+      await page.locator('[type="password"]').fill('claveMindyTest07');
+      await page.locator('[type="password"]').press('Enter');
+
+      await page.waitForTimeout(3000);
+
+      if(await page.getByText('Elige el método de acceso:').isVisible()){
+        await page.getByText('Confirma el correo de recuperación').click();
+        await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+        await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+      }
+
+    }
 
     const textarea = await page.locator("[role='textbox']")
 
@@ -234,31 +233,38 @@ ipcMain.on('create_note', async (event, argumentos) => {
 
     await page.waitForTimeout(3000);
 
-    await page.locator("[style='user-select: none;']").nth(25).click();
+    await page
+    .getByRole('button')
+    .filter({ hasText: 'Cerrar' }).click();
 
     await page.waitForTimeout(3000);
   }
 
   const stealth = require('puppeteer-extra-plugin-stealth')()
 
-  // Add the plugin to playwright (any number of plugins can be added)
-  await chromium.use(stealth)
+  await firefox.use(stealth);
 
-  const browser = await chromium.launchPersistentContext(
-    userDataDir, 
+  const userAgentStrings = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:88.0) Gecko/20100101 Firefox/88.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:87.0) Gecko/20100101 Firefox/87.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0"
+  ];
+
+  // const browser = await chromium.launchPersistentContext(
+  const browser = await firefox.launchPersistentContext(
+    userDataDir,
     {
       headless: false, // Adjust as needed
-      //Stay undetected by google
-      args: ['--profile-directory='+profileDirectory, '--start-maximized', '--disable-blink-features=AutomationControlled',"--disable-notifications",
-      "--disable-gpu",
-      "--disable-setuid-sandbox",
-      "--deterministic-fetch",
-      "--disable-features=IsolateOrigins,site-per-process",
-      "--disable-site-isolation-trials",
-      "--disable-web-security",
-      '--disable-component-extensions-with-background-pages' ]
-    }
+    userAgent: userAgentStrings[Math.floor(Math.random() * userAgentStrings.length)],
+    viewport: {width: 1920 - 400, height: 1040 - 320}
+    } 
   );
+
+  //add init script
+  await browser.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
 
   const page = await browser.newPage();
 
@@ -344,35 +350,63 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
     const startTime = argumentos.startTime;
     const endTime = argumentos.endTime;
     
-    const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Local\\Google\\Chrome\\User Data';
-    const profileDirectory = 'Default';
+    const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\dhq95odj.default-default';
 
     async function createEvent(title: string, description: string, startTime: string, endTime: string) {
 
       const stealth = require('puppeteer-extra-plugin-stealth')()
 
       // Add the plugin to playwright (any number of plugins can be added)
-      await chromium.use(stealth)
+        // // Add the plugin to playwright (any number of plugins can be added)
+        await firefox.use(stealth);
   
-      const browser = await chromium.launchPersistentContext(
-        userDataDir, 
-        {
-          headless: false, // Adjust as needed
-          //'--disable-features=IsolateOrigins', '--disable-features=site-per-process', '--disable-features=CrossSiteDocumentBlockingIfIsolating', '--disable-features=CrossSiteDocumentBlockingAlways'
-          args: [`--profile-directory=${profileDirectory}`, '--start-maximized', '--disable-blink-features=AutomationControlled',"--disable-notifications",
-          "--disable-gpu",
-          "--disable-setuid-sandbox",
-          "--deterministic-fetch",
-          "--disable-features=IsolateOrigins,site-per-process",
-          "--disable-site-isolation-trials",
-          "--disable-web-security",
-          '--disable-component-extensions-with-background-pages']
-        }
-      );
+        const userAgentStrings = [
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:88.0) Gecko/20100101 Firefox/88.0",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:87.0) Gecko/20100101 Firefox/87.0",
+          "Mozilla/5.0 (X11; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0",
+          "Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0"
+        ];
+    
+        // const browser = await chromium.launchPersistentContext(
+        const browser = await firefox.launchPersistentContext(
+          userDataDir,
+          {
+            headless: false, // Adjust as needed
+          userAgent: userAgentStrings[Math.floor(Math.random() * userAgentStrings.length)],
+          viewport: {width: 1920 - 400, height: 1040 - 320}
+          }
+        );
+      
+      //add init script
+      await browser.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+  
+      browser.addCookies([{name:"csrftoken", value: "mytokenvalue123", url: "your.application.url"}]);
     
       const page = await browser.newPage();
     
       await page.goto('https://calendar.google.com');
+
+      if(await page.getByText('Usar otra cuenta').isVisible()){
+        await page.getByText('Usar otra cuenta').click();
+        await page.locator('[type="email"]').fill("testeomindy@gmail.com");
+        await page.locator('[type="email"]').press('Enter');
+  
+        await page.waitForTimeout(4000);
+    
+        await page.locator('[type="password"]').fill('claveMindyTest07');
+        await page.locator('[type="password"]').press('Enter');
+  
+        await page.waitForTimeout(3000);
+  
+        if(await page.getByText('Elige el método de acceso:').isVisible()){
+          await page.getByText('Confirma el correo de recuperación').click();
+          await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+          await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+        }
+  
+      }
 
       const createButton = await page.waitForSelector('[data-is-column-view-context="true"]');
       await createButton.click();
@@ -402,12 +436,13 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
 
       await page.waitForTimeout(2000);
 
-      const saveButton = await page.locator('[isfullscreen="false"] button').nth(28);
+      const saveButton = await page
+      .getByRole('button')
+      .filter({ hasText: 'Guardar' });
       await saveButton.click();
       await page.waitForTimeout(3000);
 
       browser.close();
-
     }
 
     let respuesta = {
@@ -427,6 +462,7 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
     }).catch((e) => {
       respuesta.content += ": " + e;
       event.reply('create_event_google_calendar', respuesta);
+      console.log("Error while trying to create event: ", e);
     });
 });
 
@@ -434,42 +470,67 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
 
   const title = argumentos.title;
   const description = (argumentos.description) ? argumentos.description : "";
-  const dueDate = argumentos.dueDate;
+  const dueDate = (argumentos.dueDate) ? argumentos.dueDate : "";
 
-  const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Local\\Google\\Chrome\\User Data';
-  console.log("os.userInfo().username", os.userInfo().username);
-  const profileDirectory = 'Default';
+  const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\dhq95odj.default-default';
 
   async function createTask(title: string, description: string, dueDate: string){
 
     const stealth = require('puppeteer-extra-plugin-stealth')()
 
     // Add the plugin to playwright (any number of plugins can be added)
-    await chromium.use(stealth)
+      // // Add the plugin to playwright (any number of plugins can be added)
+      await firefox.use(stealth);
 
-    const browser = await chromium.launchPersistentContext(
-      userDataDir, 
-      {
-        headless: false, // Adjust as needed
-        args: [`--profile-directory=${profileDirectory}`, '--start-maximized', '--disable-blink-features=AutomationControlled',"--disable-notifications",
-        "--disable-gpu",
-        "--disable-setuid-sandbox",
-        "--deterministic-fetch",
-        "--disable-features=IsolateOrigins,site-per-process",
-        "--disable-site-isolation-trials",
-        "--disable-web-security",
-        '--disable-component-extensions-with-background-pages'],
-      },
-    );
+      const userAgentStrings = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:88.0) Gecko/20100101 Firefox/88.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:87.0) Gecko/20100101 Firefox/87.0",
+        "Mozilla/5.0 (X11; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0",
+        "Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0"
+      ];
+  
+      // const browser = await chromium.launchPersistentContext(
+      const browser = await firefox.launchPersistentContext(
+        userDataDir,
+        {
+          headless: false, // Adjust as needed
+        userAgent: userAgentStrings[Math.floor(Math.random() * userAgentStrings.length)],
+        viewport: {width: 1920 - 400, height: 1040 - 320}
+        }
+      );
     
     //add init script
-    await browser.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    await browser.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+
+    browser.addCookies([{name:"csrftoken", value: "mytokenvalue123", url: "your.application.url"}]);
   
     const page = await browser.newPage();
 
     await page.waitForTimeout(4000);
   
     await page.goto('https://calendar.google.com');
+    
+    if(await page.getByText('Usar otra cuenta').isVisible()){
+      await page.getByText('Usar otra cuenta').click();
+      await page.locator('[type="email"]').fill("testeomindy@gmail.com");
+      await page.locator('[type="email"]').press('Enter');
+
+      await page.waitForTimeout(4000);
+  
+      await page.locator('[type="password"]').fill('claveMindyTest07');
+      await page.locator('[type="password"]').press('Enter');
+
+      await page.waitForTimeout(3000);
+
+      if(await page.getByText('Elige el método de acceso:').isVisible()){
+        await page.getByText('Confirma el correo de recuperación').click();
+        await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+        await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+      }
+
+    }
 
     const createButton = await page.locator('[data-is-column-view-context="true"]');
     await createButton.click();
@@ -489,20 +550,23 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
     var fecha_cierre = await page.locator('[isfullscreen="false"] button')
     await fecha_cierre.nth(22).click();
 
-    await page.waitForTimeout(2000);
+    console.log("Paso 489");
 
-    fecha_cierre = await page.locator('[isfullscreen="false"] input[type="text"]');
-    await fecha_cierre.nth(7).fill(dueDate);
+    await page.locator('[isfullscreen="false"] [aria-label="Fecha de inicio"]').nth(1).fill(dueDate);
+
+    console.log("Paso 493");
 
     await page.waitForTimeout(2000);
 
     const description_note = await page.locator("[isfullscreen='false'] textarea");
-    description_note.fill(description);
+    await description_note.fill(description);
 
     await page.waitForTimeout(2000);
     
-    const save_button = await page.locator('[isfullscreen="false"] button');
-    save_button.nth(35).click();
+    const save_button = await page
+    .getByRole('button')
+    .filter({ hasText: 'Guardar' });
+    save_button.click();
 
     await page.waitForTimeout(3000);
     browser.close();
@@ -595,7 +659,7 @@ ipcMain.on('generate_image', async (event, argumentos) => {
   event.reply('generate_image', respuesta);
 })
 
-ipcMain.on('generacion_documentos', async (event, argumentos) => {
+ipcMain.on('create_documents', async (event, argumentos) => {
 
   var tema = argumentos.subject;
 
@@ -645,6 +709,8 @@ ipcMain.on('generacion_documentos', async (event, argumentos) => {
     texto_completo+="\n\n";
   }
 
+  tema = tema.replaceAll(" ", "_").toLowerCase();
+
   const output_path = "./renderer/public/documents/"+tema+".pdf";
 
   // markdownpdf().from.string(texto_completo).to(output_path, function () {
@@ -660,7 +726,7 @@ ipcMain.on('generacion_documentos', async (event, argumentos) => {
 
   let respuesta = {
     "status": true,
-    "content": "Document created succesfully"
+    "content": "Document created succesfully: " + tema
   }
   
   // Set your callback function
@@ -675,7 +741,7 @@ ipcMain.on('generacion_documentos', async (event, argumentos) => {
   
   // Call pandoc
   nodePandoc(texto_completo, args, callback);
-  event.reply('generacion_documentos', respuesta);
+  event.reply('create_documents', respuesta);
 })
 
 ipcMain.on('eliminar_todas_imagenes_clasificacion', async (event) => {
@@ -695,4 +761,8 @@ ipcMain.on('eliminar_todas_imagenes_clasificacion', async (event) => {
   );
 
   event.reply('eliminar_todas_imagenes_clasificacion', "All data classifications removed");
+}); 
+
+ipcMain.on('go_to_your_mind_palace', async (event) => {
+  event.reply('go_to_your_mind_palace');
 }); 

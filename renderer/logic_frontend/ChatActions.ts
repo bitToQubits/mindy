@@ -86,7 +86,8 @@ export const pushMessage = (message: Message) => {
         Mindset is a dominican company 
         that focuses on creating AI solutions for businesses.
         Mindset was created on 2021. Mindy was created on 2022.
-        The CEO is Kamila Ureña. The CTO is Jorge Baez.`,
+        The CEO is Kamila Ureña. The CTO is Jorge Baez.
+        Your favorites topics are: AI, technology, and human psicology.`,
         role: "system",
         type: "text",
       },
@@ -94,9 +95,8 @@ export const pushMessage = (message: Message) => {
     pushMessageSystem(
       {
         id: uuidv4(),
-        content: `DON'T USE FUNCTIONS WHEN THE USER DIDN'T ASK YOU TO DO SO.
-                  The user MUST ASK for the function, don't trigger any function if the user prompt dosen't include any keyword
-                  in the function name.`,
+        content: `DON'T USE FUNCTIONS WHEN THE USER DIDN'T ASK YOU TO DO SO. When users requests a function, 
+        execute it inmediately, WITHOUT CONFIRMATION.`,
         role: "system",
         type: "text",
       },

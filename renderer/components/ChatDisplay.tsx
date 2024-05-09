@@ -19,12 +19,16 @@ import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass';
 import AudioPlayer from "../components/AudioPlayer";
-import {notifications} from '@mantine/notifications';
 
 const ChatDisplay = () => {
   const router = useRouter();
   const activeChatId = router.query.chatId as string | undefined;
+  var actionRunning = useChatStore((state) => state.actionRunning);
   const [isHydrated, setIsHydrated] = useState(false);
+
+  window.ipc.on('go_to_your_mind_palace', (event) => {
+    router.push('/bankKnowledge');
+  });
 
   useEffect(() => {
     setIsHydrated(true);
@@ -130,6 +134,12 @@ const ChatDisplay = () => {
     };
   }, [audioState]);
 
+  const actionRunningRef = useRef(actionRunning); // Create a ref
+
+  useEffect(() => {
+    actionRunningRef.current = actionRunning; // Update the ref value whenever actionRunning changes
+  }, [actionRunning]);
+
   let mediaElement;
   var camera;
   var uniforms;
@@ -170,6 +180,15 @@ const ChatDisplay = () => {
       camera.position.x += (mouseX - camera.position.x) * .05;
       camera.position.y += (-mouseY - camera.position.y) * 0.5;
       camera.lookAt(scene.position);
+
+      if(actionRunningRef.current){
+        mesh.rotation.x+=2/80;
+        mesh.rotation.y+=2/130;
+      }else{
+        mesh.rotation.x+=0.002;
+        mesh.rotation.y+=0.002;
+      }
+
       uniforms.u_time.value = clock.getElapsedTime();
       uniforms.u_frequency.value = analyser.getAverageFrequency();
       bloomComposer.render();
@@ -196,9 +215,9 @@ const ChatDisplay = () => {
         red: 1.0,
         green: 0,
         blue: 0,
-        threshold: 0.27,
-        strength: 0.1,
-        radius: 0.2
+        threshold: 0,
+        strength: 0.11,
+        radius: 0
       }
 
       renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -346,7 +365,7 @@ const ChatDisplay = () => {
         `
       });
 
-      const geo = new THREE.IcosahedronGeometry(4, 30 );
+      const geo = new THREE.IcosahedronGeometry(5, 20 );
       mesh = new THREE.Mesh(geo, mat);
       scene.add(mesh);
       mesh.material.wireframe = true;

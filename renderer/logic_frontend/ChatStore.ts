@@ -24,6 +24,7 @@ export const excludeFromState = [
   "loadingImages",
   "topic",
   "activeChatId",
+  "actionRunning",
   "playerRef",
   "playerRefInit",
   "playerState",
@@ -62,7 +63,7 @@ interface SettingsForm {
 }
 
 export const defaultSettings = {
-  model: "gpt-3.5-turbo-0125",
+  model: "gpt-4-turbo",
   temperature: 1,
   top_p: 1,
   n: 1,
@@ -101,6 +102,7 @@ export interface ChatState {
   chats: Chat[];
   classifiers: Classifier[];
   activeChatId: string | undefined;
+  actionRunning: boolean | undefined;
   colorScheme: "light" | "dark";
   currentAbortController: AbortController | undefined;
   settingsForm: SettingsForm;
@@ -146,6 +148,7 @@ export const initialState = {
   chats: [],
   classifiers: [],
   activeChatId: undefined,
+  actionRunning: false,
   colorScheme: "light" as "light" | "dark",
   currentAbortController: undefined,
   settingsForm: defaultSettings,

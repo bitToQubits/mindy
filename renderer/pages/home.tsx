@@ -15,7 +15,6 @@ import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer';
 import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass';
-import { notifications } from "@mantine/notifications";
 
 export default function Page(){
   const router = useRouter();
@@ -56,7 +55,7 @@ export default function Page(){
           return;
         }
       }else if (event.key == "f"){
-        window.ipc.send('create_event_google_calendar', {title : "Titulo", description : "Descripcion", startTime : "2023-12-01", endTime : "2024-01-01"});
+        window.ipc.send('create_note', {term : "Quantum mechanics", search_for_images : true });
       }
     };
     
@@ -132,7 +131,8 @@ export default function Page(){
       camera.position.y += (-mouseY - camera.position.y) * 0.5;
       camera.lookAt(scene.position);
       uniforms.u_time.value = clock.getElapsedTime();
-
+      mesh.rotation.x+=0.002;
+      mesh.rotation.y+=0.002;
       bloomComposer.render();
     }
 
@@ -156,9 +156,9 @@ export default function Page(){
         red: 1.0,
         green: 0,
         blue: 0,
-        threshold: 0.27,
-        strength: 0.1,
-        radius: 0.2
+        threshold: 0,
+        strength: 0.11,
+        radius: 0
       }
 
       renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -306,7 +306,7 @@ export default function Page(){
         `
       });
 
-      const geo = new THREE.IcosahedronGeometry(4, 30 );
+      const geo = new THREE.IcosahedronGeometry(4, 20 );
       mesh = new THREE.Mesh(geo, mat);
       scene.add(mesh);
       mesh.material.wireframe = true;
