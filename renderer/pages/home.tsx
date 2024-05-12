@@ -42,6 +42,10 @@ export default function Page(){
 
     toggleAudio();
 
+    const set = useChatStore.setState;
+
+    set({ modelChoiceTTS: "openai" });
+
     const handleKeyDown = (event) => {
       if (event.repeat) {
         return;
@@ -54,9 +58,11 @@ export default function Page(){
         } else if (audioState === "transcribing") {
           return;
         }
-      }else if (event.key == "f"){
-        window.ipc.send('create_note', {term : "Quantum mechanics", search_for_images : true });
       }
+      
+      // else if (event.key == "m"){
+      //   addChat(router, true);
+      // }
     };
     
     const handleKeyUp = (event) => {
@@ -306,7 +312,7 @@ export default function Page(){
         `
       });
 
-      const geo = new THREE.IcosahedronGeometry(4, 20 );
+      const geo = new THREE.IcosahedronGeometry(4.3, 20 );
       mesh = new THREE.Mesh(geo, mat);
       scene.add(mesh);
       mesh.material.wireframe = true;

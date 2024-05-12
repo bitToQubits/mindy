@@ -47,6 +47,8 @@ const ChatDisplay = () => {
 
   const lastMessage = activeChat?.messages[activeChat.messages.length - 1];
 
+  console.log(lastMessage);
+
   const scrolledToBottom = () => {
     const winScroll =
       document.body.scrollTop || document.documentElement.scrollTop;
@@ -64,13 +66,28 @@ const ChatDisplay = () => {
 
   var audioState = useChatStore((state) => state.audioState);
 
+  const ttsText = useChatStore((state) => state.ttsText);
+
   useEffect(() => {
     if (isScrolledToBottom) {
       scrollToBottom();
+      console.log("Debio de haber bajado")
     }
+    
+    const images = viewport.current?.getElementsByTagName('img');
+
+    if (images) {
+      Array.from(images).forEach((img) => {
+        img.onload = scrollToBottom;
+      });
+    }
+
+    console.log('scrolling to bottom', isScrolledToBottom);
+    
   }, [isScrolledToBottom, activeChat, lastMessage?.content]);
 
   useEffect(() => {
+
     return () => {
       window.removeEventListener('resize', recalculo_esferico);
       document.removeEventListener('mousemove', movimiento_mouse);
@@ -180,13 +197,10 @@ const ChatDisplay = () => {
       if(actionRunningRef.current){
         mesh.rotation.x+=2/80;
         mesh.rotation.y+=2/130;
-      }else{
-        mesh.rotation.x+=0.002;
-        mesh.rotation.y+=0.002;
       }
 
       uniforms.u_time.value = clock.getElapsedTime();
-      uniforms.u_frequency.value = analyser.getAverageFrequency();
+      // uniforms.u_frequency.value = analyser.getAverageFrequency();
       bloomComposer.render();
     }
 
@@ -361,7 +375,7 @@ const ChatDisplay = () => {
         `
       });
 
-      const geo = new THREE.IcosahedronGeometry(5, 20 );
+      const geo = new THREE.IcosahedronGeometry(4.8, 20 );
       mesh = new THREE.Mesh(geo, mat);
       scene.add(mesh);
       mesh.material.wireframe = true;
@@ -375,7 +389,7 @@ const ChatDisplay = () => {
 
       mediaElement = mediaElement || sound.setMediaElementSource(audioElement);
 
-      analyser = new THREE.AudioAnalyser(sound, 32);
+      // analyser = new THREE.AudioAnalyser(sound, 32);
 
       uniforms.u_red.value = 1;
       uniforms.u_green.value = 0;
@@ -396,6 +410,8 @@ const ChatDisplay = () => {
       router.push('/bankKnowledge');
       window?.ipc.off('go_to_your_mind_palace');
     });
+
+    console.log("ttstext", ttsText)
 
   }, [isHydrated]);
 

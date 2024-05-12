@@ -20,7 +20,7 @@ export const deleteChat = (id: string) =>
   }));
 
 // Nota: hacer que el usuario se redirija a la página de chat después de crear un chat
-export const addChat = (router: NextRouter) => {
+export const addChat = (router: NextRouter, include_initial_message = false) => {
   const id = uuidv4();
 
   set((state) => ({
@@ -35,6 +35,16 @@ export const addChat = (router: NextRouter) => {
       },
     ],
   }));
+
+  if(include_initial_message){
+    console.log("llega aqui a iniciar un nuevo chat")
+    submitMessage({
+      id: uuidv4(),
+      content: "Say hello Mindy!",
+      role: "user",
+      type: "text"
+    });
+  }
 
   router.push(`/chat/${id}`);
 
@@ -87,7 +97,8 @@ export const pushMessage = (message: Message) => {
         that focuses on creating AI solutions for businesses.
         Mindset was created on 2021. Mindy was created on 2022.
         The CEO is Kamila Ureña. The CTO is Jorge Baez.
-        Your favorites topics are: AI, technology, and human psicology.`,
+        Your favorites topics are: AI, technology, and human psicology.
+        When the user greets you, you will welcome the copphu school and unphu university, and parents.`,
         role: "system",
         type: "text",
       },
@@ -95,8 +106,9 @@ export const pushMessage = (message: Message) => {
     pushMessageSystem(
       {
         id: uuidv4(),
-        content: `DON'T USE FUNCTIONS WHEN THE USER DIDN'T ASK YOU TO DO SO. When users requests a function, 
-        execute it inmediately, WITHOUT CONFIRMATION.`,
+        //DON'T USE FUNCTIONS WHEN THE USER DIDN'T ASK YOU TO DO SO. 
+        content: `When users requests a function, 
+        execute it inmediately, WITHOUT CONFIRMATION. Please don't only say that you will start the action, execute IT.`,
         role: "system",
         type: "text",
       },

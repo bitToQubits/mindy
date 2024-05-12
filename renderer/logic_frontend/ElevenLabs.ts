@@ -39,6 +39,7 @@ export const genAudio = async ({
   voice?: string;
   style?: string;
 }): Promise<string | undefined> => {
+  text = text.replace(/([*_`[\]])/g, "");
   try {
     const response = await fetch(`${BASE_URL}/text-to-speech/${voice}`, {
       method: "POST",
@@ -47,7 +48,11 @@ export const genAudio = async ({
         "xi-api-key": key,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, "model_id":"eleven_multilingual_v2", "voice_settings": {
+        "stability": 0.46,
+        "similarity_boost": 1,
+        "use_speaker_boost": true
+      } }),
     });
     if (!response.ok || !response.body) {
       const readBody = await response.text();

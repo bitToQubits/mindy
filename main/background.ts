@@ -46,7 +46,8 @@ app.on('window-all-closed', () => {
 ipcMain.on('search_in_internet', async (event, argumentos) => {
 
   let busqueda_internet = argumentos.query;
-  console.log("Busqueda en internet: ",argumentos);
+
+  console.log("argumentos.query", argumentos.query)
 
   axios.post('https://api.tavily.com/search/', {
     "api_key": "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",
@@ -79,40 +80,38 @@ ipcMain.on('search_in_internet', async (event, argumentos) => {
 
 })
 
-
-//PENDIENTEEEE
 ipcMain.on('search_and_analyze_image', async (event, argumentos) => {
 
-    console.log("search_and_analyze_image", argumentos);
 
     let nombre_archivo = argumentos.image;
+
+    console.log("argumentos.image", argumentos.image)
 
     var dirPath = path.join(os.homedir(), 'Downloads');
     
     // Read the directory contents
     var filesInDir = fs.readdirSync(dirPath);
-    console.log(filesInDir)
+
+    console.log("filesInDir", filesInDir)
     
-    var files = filesInDir.filter((fileName) => fileName.replaceAll("_","").replaceAll("-","").toLowerCase().includes(nombre_archivo.toLowerCase().replaceAll("_","").replaceAll("-","")) && (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')));
+    var files = filesInDir.filter((fileName) => fileName.replaceAll("_","").replaceAll(" ","").replaceAll("-","").toLowerCase().includes(nombre_archivo.replaceAll("_","").replaceAll(" ","").replaceAll("-","").toLowerCase()) && (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')));
     
     if(files.length == 0){
       dirPath = path.join(os.homedir(), 'OneDrive/Imágenes');
-      console.log(dirPath);
     
       // Read the directory contents
       filesInDir = fs.readdirSync(dirPath);
     
-      files = filesInDir.filter((fileName) => fileName.replaceAll("_","").replaceAll("-","").toLowerCase().includes(nombre_archivo.toLowerCase().replaceAll("_","").replaceAll("-","")) && (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')));
+      files = filesInDir.filter((fileName) => fileName.replaceAll("_","").replaceAll(" ","").replaceAll("-","").toLowerCase().includes(nombre_archivo.replaceAll(" ","").replaceAll("_","").replaceAll("-","").toLowerCase()) && (fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp')));
     
     }
     
     if(files.length == 0){
-      console.log("Entra aquii 110")
       let respuesta = {
         "status": false,
         "content": "Imagen no encontrada."
       };
-      event.reply('analyze_image', respuesta);
+      event.reply('search_and_analyze_image', respuesta);
       return;
     }
     
@@ -120,7 +119,6 @@ ipcMain.on('search_and_analyze_image', async (event, argumentos) => {
     const file_buffer  = fs.readFileSync(dirPath+'\\'+files[0]);
     const contents_in_base64 = file_buffer.toString('base64');
 
-    console.log("Entra aquii 123")
     let respuesta = {
       "status": true,
       "content": contents_in_base64
@@ -129,7 +127,7 @@ ipcMain.on('search_and_analyze_image', async (event, argumentos) => {
     event.reply('search_and_analyze_image', respuesta);
 
 });
-
+  
 ipcMain.on('create_note', async (event, argumentos) => {
 
   var termino = argumentos.term;
@@ -462,7 +460,6 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
     }).catch((e) => {
       respuesta.content += ": " + e;
       event.reply('create_event_google_calendar', respuesta);
-      console.log("Error while trying to create event: ", e);
     });
 });
 
@@ -550,11 +547,7 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
     var fecha_cierre = await page.locator('[isfullscreen="false"] button')
     await fecha_cierre.nth(22).click();
 
-    console.log("Paso 489");
-
     await page.locator('[isfullscreen="false"] [aria-label="Fecha de inicio"]').nth(1).fill(dueDate);
-
-    console.log("Paso 493");
 
     await page.waitForTimeout(2000);
 
@@ -589,7 +582,6 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
 });
 
 ipcMain.on('download_request', async (event, args) => {
-  console.log("download request!")
   const imageName = uuidv4();
   const downloadPath = 'renderer/public/images/classifiers/'+imageName+'.png'; // Replace with your desired download path
 
@@ -612,7 +604,6 @@ ipcMain.on('download_request', async (event, args) => {
       writer.on('error', reject);
     });
 
-    console.log('Image downloaded successfully!');
     event.reply('download_request', imageName);
   } catch (error) {
     console.error('Error downloading image:', error.message);
@@ -623,8 +614,6 @@ ipcMain.on('download_request', async (event, args) => {
 
 
 ipcMain.on('generate_image', async (event, argumentos) => {
-
-  console.log("Generate_images", argumentos);
 
   let prompt = argumentos.prompt;
   let number = (argumentos.number) ? argumentos.number : 1;
@@ -668,7 +657,7 @@ ipcMain.on('create_documents', async (event, argumentos) => {
       var response;
       response = await groq.chat.completions.create({
         messages: [
-          { role: 'system', content: "Use markdown to format your answer. Dont put any conclusion section in your answer, unless the subtopic includes it. You will explain the user topic in detail."},
+          { role: 'system', content: "Use markdown to format your answer. Be careful with the headers, dont bold the headers. Dont put any conclusion section in your answer, unless the subtopic includes it. You will explain the user topic in detail."},
           { role: 'user', content: subtema + ", " + tema },
         ],
         model: 'llama3-70b-8192',
@@ -684,7 +673,7 @@ ipcMain.on('create_documents', async (event, argumentos) => {
     {"role": "user", "content": tema}],
     model: "gpt-4-turbo",
   });
-
+ 
   var division_temas = respuesta_division_tematica_openai.choices[0].message.content.split(",");
 
   for(var i = 0; i < division_temas.length; i++){
@@ -726,7 +715,7 @@ ipcMain.on('create_documents', async (event, argumentos) => {
 
   let respuesta = {
     "status": true,
-    "content": "Document created succesfully: " + tema
+    "content": "Document created succesfully: ```" + tema + "```"
   }
   
   // Set your callback function
@@ -739,7 +728,7 @@ ipcMain.on('create_documents', async (event, argumentos) => {
     
   };
   
-  // Call pandoc
+  // Call pandoc 
   nodePandoc(texto_completo, args, callback);
   event.reply('create_documents', respuesta);
 })
@@ -765,4 +754,34 @@ ipcMain.on('eliminar_todas_imagenes_clasificacion', async (event) => {
 
 ipcMain.on('go_to_your_mind_palace', async (event) => {
   event.reply('go_to_your_mind_palace');
-}); 
+});
+
+ipcMain.on('show_document', async (event, argumentos) => {
+  let file_name = argumentos.document_name;
+
+  // Read the directory contents
+  let filesInDir = fs.readdirSync('renderer/public/documents');
+
+  let files = filesInDir.filter((fileName) => fileName.replaceAll("_","").replaceAll("-","").toLowerCase().includes(file_name.toLowerCase().replaceAll("_","").replaceAll("-","")));
+  
+  if(files.length == 0){
+    let respuesta = {
+      "status": false,
+      "content": "Document not founded."
+    };
+    event.reply('show_document', respuesta);
+  }else{
+    //open the document with edge pdf visualizer
+    const { exec } = require('child_process');
+    exec('start "" "renderer/public/documents/'+files[0]+'"');
+    let respuesta = {
+      "status": false,
+      "content": "Document showed successfully."
+    };
+    //After 15 seconds close the pdf visualizer
+    setTimeout(() => {
+      exec('taskkill /im msedge.exe /f');
+    }, 20000);
+    event.reply('show_document', respuesta);
+  }
+});

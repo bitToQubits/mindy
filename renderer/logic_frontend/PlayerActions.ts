@@ -186,7 +186,7 @@ const fetchAudio = async (idx: number) => {
   }
 
   set({ playerApiState: "loading" });
-
+  console.log("VoiceID PlayerActions", voiceId);
   try {
     const audioURL = await genAudio({
       text: chunk.text,

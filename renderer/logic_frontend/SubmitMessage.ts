@@ -41,6 +41,7 @@ export const submitMessage = async (message: Message) => {
     console.error("Chat not found");
     return;
   }else{
+    console.log("Primer mensaje: ", message.content);
   }
 
   // If this is an existing message, remove all the messages after it
@@ -54,6 +55,7 @@ export const submitMessage = async (message: Message) => {
         return c;
       }),
     }));
+    console.log("Entra en esta condicion");
   }
 
   // Add the message
@@ -66,6 +68,7 @@ export const submitMessage = async (message: Message) => {
       return c;
     }),
   }));
+  console.log("debio agregar el mensaje aqui");
 
   const assistantMsgId = uuidv4();
   // Add the assistant's response
@@ -125,6 +128,7 @@ export const submitMessage = async (message: Message) => {
     apiKey,
     abortController,
     (content) => {
+      //get tts text
       set((state) => ({
         ttsText: (state.ttsText || "") + content,
         chats: updateChatMessages(state.chats, chat.id, (messages) => {
@@ -194,6 +198,10 @@ export const submitMessage = async (message: Message) => {
       chat.title === undefined &&
       numWords >= 4
     ) {
+      console.log("Lo que clasifica al chat", chat.messages
+      .slice(2)
+      .map((m) => (m.type == "image") ? "" : (m.type == "text_image") ? m.content[0].text : m.content )
+      .join("\n"));
       const msg = {
         id: uuidv4(),
         content: `Write the topic of the following conversation snippet in 3 words or less. 
@@ -262,7 +270,8 @@ export const submitMessage = async (message: Message) => {
       content: `Classify the user topic in one of the following categories, 
                 if no one suits create a new category: ${classifiers
                   .map((m) => m.title)
-                  .join("\n")}
+                  .join(",")}
+                Dont hesitate to create a new category if needed.
                 Also, provide the keyword in order to search for an unplash image related
                 to the category.
                 Put the category name followed by a comma and then the keyword.
@@ -279,7 +288,7 @@ export const submitMessage = async (message: Message) => {
     });
 
     msgs.push({
-      content: chat.messages[1].content + " " + chat.title,
+      content: chat.messages[2].content + " " + chat.title,
       role: "user",
     })
 

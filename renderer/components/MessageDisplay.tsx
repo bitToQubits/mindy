@@ -52,6 +52,9 @@ const useStyles = createStyles((theme: MantineTheme) => ({
     "& pre": {
       overflowX: "scroll",
     },
+    "& code": {
+      wordBreak: "break-all",
+    },
     "& table": {
       width: "100%",
       minWidth: "50%",

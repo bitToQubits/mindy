@@ -7,13 +7,13 @@ const AudioStreamPlayer = () => {
 
   const ttsID = useChatStore((state) => state.ttsID);
 
-  const initialRender = useRef(true);
+  // const initialRender = useRef(true);
   useEffect(() => {
-    // Do not play audio on initial render
-    if (initialRender.current) {
-      initialRender.current = false;
-      return;
-    }
+    // // Do not play audio on initial render
+    // if (initialRender.current) {
+    //   initialRender.current = false;
+    //   return;
+    // }
     return initPlayback();
   }, [ttsID]);
 

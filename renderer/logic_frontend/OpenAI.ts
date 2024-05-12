@@ -145,8 +145,25 @@ export async function streamCompletion(
     {
       type: "function",
       function: {
+        name: "show_document",
+        description: "Show a document created in this conversation. The user must specify the document name. REMEMBER the user with you can open or show/display the document.",
+        parameters: {
+          type: "object",
+          properties: {
+            "document_name": {
+              type: "string",
+              description: "The exact document name generated during conversation. Required.",
+            },
+          },
+          required: ["document_name"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
         name: "go_to_your_mind_palace",
-        description: "Go to your mind palace. When the user asks to go to the mind palace, or say show me your brain, execute this function.",
+        description: "Go to your mind palace. When the user asks to go to the mind palace, or say show me your brain, execute this function. ONLY EXECUTE THIS FUNCTION WHEN USER SAY SHOW ME YOUR BRAIN MINDY.",
       },
     },
     {
@@ -309,13 +326,13 @@ export async function streamCompletion(
       type: "function",
       function: {
         name: "change_voice",
-        description: "Change the voice of the assistant. ",
+        description: "Change your voice. Change the voice of the asisstant. EXECUTE THIS FUNCTION INMEDIATELY WHEN THE USER REQUESTS IT.",
         parameters: {
           type: "object",
           properties: {
             voice_name: {
               type: "string",
-              description: "The name of the voice to change to. Required. Possible values: Default, Omar, Dulce, Brito, Xiomara, Paola, Jose Miguel, Zeneyda, Dyango.",
+              description: "The name of the voice to change to. Required. Some values: Default, Omar, Dulce, Brito, Xiomara, Paola, Jose Miguel, Zeneyda, Seneida, Dyango Batista. ",
             },
           },
           required: ["voice_name"],
@@ -708,11 +725,11 @@ export async function streamCompletion(
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "Document created successfully";
+                          c.messages[messages.length -1].content = respuesta['content'];
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "Document created successfully",
+                            content: respuesta['content'],
                             role: "assistant",
                             loading: false,
                             type: "text",
@@ -906,7 +923,15 @@ export async function streamCompletion(
             break;
           case "search_and_analyze_image":
             window.ipc.send('search_and_analyze_image', sum);
+            console.log("llega a enviarse pero no llega")
+            set((state) => ({
+              actionRunning: true,
+            }));
             window.ipc.on('search_and_analyze_image', (respuesta) => {
+              set((state) => ({
+                actionRunning: false,
+              }));
+
               if(respuesta['status'] == true){
                 //Obtener el ultimo mensaje del chat y adjuntarle la respuesta
                 const activeChatId = get().activeChatId;
@@ -954,12 +979,35 @@ export async function streamCompletion(
                   message: respuesta['content'],
                   color: "gray",
                 });
+
+                set((state) => ({
+                  chats: state.chats.map((c) => {
+                    if (c.id === activeChatId) {
+                      if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
+                        if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
+                          c.messages[messages.length -1].content = "Error while trying to search and analyze the image";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "Error while trying to search and analyze the image",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
+                        }
+                      }
+                    }
+                    return c;
+                  }),
+                }));
               }
-              window.ipc.off('analyze_image');
+              window.ipc.off('search_and_analyze_image');
             });
             break;
           case "change_voice":
             let voice = sum.voice_name;
+            let founded = false;
+
             switch(voice){
 
               case "Default":
@@ -969,6 +1017,7 @@ export async function streamCompletion(
                   message: "Voice changed to Default",
                   color: "green",
                 });
+                founded = true;
                 break;
 
               case "Omar":
@@ -979,6 +1028,7 @@ export async function streamCompletion(
                   message: "Voice changed to Omar",
                   color: "green",
                 });
+                founded = true;
                 break;
 
               case "Dulce":
@@ -989,6 +1039,7 @@ export async function streamCompletion(
                   message: "Voice changed to Dulce",
                   color: "green",
                 });
+                founded = true;
                 break;
 
               case "Brito":
@@ -999,9 +1050,11 @@ export async function streamCompletion(
                   message: "Voice changed to Brito",
                   color: "green",
                 });
+                founded = true;
                 break;
 
               case "Xiomara":
+              case "Siomara":
                 set({ modelChoiceTTS: "11labs" });
                 set({ voice11labsID : "vsSAWGQXIAyGGIWsTWe8" });
                 notifications.show({
@@ -1009,6 +1062,7 @@ export async function streamCompletion(
                   message: "Voice changed to Xiomara",
                   color: "green",
                 });
+                founded = true;
                 break;
 
               case "Paola":
@@ -1019,6 +1073,7 @@ export async function streamCompletion(
                   message: "Voice changed to Paola",
                   color: "green",
                 });
+                founded = true;
                 break;
 
               case "Jose Miguel":
@@ -1029,9 +1084,11 @@ export async function streamCompletion(
                   message: "Voice changed to Jose Miguel",
                   color: "green",
                 });
+                founded = true;
                 break;
 
               case "Zeneyda":
+              case "Seneida":
                 set({ modelChoiceTTS: "11labs" });
                 set({ voice11labsID : "t0NNUd4jJmIkKtSxV2qY" });
                 notifications.show({
@@ -1039,32 +1096,145 @@ export async function streamCompletion(
                   message: "Voice changed to Zeneyda",
                   color: "green",
                 });
+                founded = true;
                 break;
-
-              case "Dyango":
-                set({ modelChoiceTTS: "11labs" });
-                set({ voice11labsID : "w8J9n2J9QvI2jBb6u1Uk" });
-                notifications.show({
-                  title: "Action completed",
-                  message: "Voice changed to Dyango",
-                  color: "green",
-                });
-                break;
-
 
               default:
-                notifications.show({
-                  title: "Error",
-                  message: "Voice not founded",
-                  color: "green",
-                });
+                if(voice.toLowerCase().includes("batista")){
+                  set({ modelChoiceTTS: "11labs" });
+                  set({ voice11labsID : "Hk7pAVKxzAMECFeyV1YG" });
+                  notifications.show({
+                    title: "Action completed",
+                    message: "Voice changed to Dyango",
+                    color: "green",
+                  });
+                  founded = true;
+                  voice = "Dyango";
+                }else{
+                  notifications.show({
+                    title: "Error",
+                    message: "Voice not founded",
+                    color: "gray",
+                  });
+                }
+
             }
-            break;
+
+            const activeChatId = get().activeChatId;
+            if(founded){
+              console.log("VOICE SUCESSFULLY CHANGED")
+              set((state) => ({
+                ttsText: (state.ttsText || "") + "Voice changed successfully to "+voice,
+                chats: state.chats.map((c) => {
+                  if (c.id === activeChatId) {
+                    if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
+                      if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
+                        c.messages[messages.length -1].content = "Voice changed to "+voice;
+                      }else{
+                        c.messages.push({
+                          id: uuidv4(),
+                          content: "Voice changed to "+voice,
+                          role: "assistant",
+                          loading: false,
+                          type: "text",
+                        });
+                      }
+                    }
+                  }
+                  return c;
+                }),
+              }));
+            }else{
+              set((state) => ({
+                chats: state.chats.map((c) => {
+                  if (c.id === activeChatId) {
+                    if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
+                      if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
+                        c.messages[messages.length -1].content = "Error while trying to change the voice";
+                      }else{
+                        c.messages.push({
+                          id: uuidv4(),
+                          content: "Error while trying to change the voice",
+                          role: "assistant",
+                          loading: false,
+                          type: "text",
+                        });
+                      }
+                    }
+                  }
+                  return c;
+                }),
+              }));
+            }
+          break;
 
           case "go_to_your_mind_palace":
             window.ipc.send('go_to_your_mind_palace', sum);
             window.ipc.on('go_to_your_mind_palace', () => {
-              window.ipc.off('go_to_your_mind_palace');
+              const activeChatId = get().activeChatId;
+              set((state) => ({
+                chats: state.chats.map((c) => {
+                  if (c.id === activeChatId) {
+                    if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
+                      if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
+                        c.messages.pop();
+                      }
+                    }
+                  }
+                  return c;
+                }),
+              }));
+            });
+            break;
+
+          case "show_document":
+            window.ipc.send('show_document', sum);
+            window.ipc.on('show_document', (respuesta) => {
+              const activeChatId = get().activeChatId;
+
+              if(respuesta['status']){
+                set((state) => ({
+                  chats: state.chats.map((c) => {
+                    if (c.id === activeChatId) {
+                      if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
+                        if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
+                          c.messages[messages.length -1].content = "I showed to you the document";
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: "I showed to you the document",
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
+                        }
+                      }
+                    }
+                    return c;
+                  }),
+                }));
+              }else{
+                set((state) => ({
+                  chats: state.chats.map((c) => {
+                    if (c.id === activeChatId) {
+                      if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
+                        if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
+                          c.messages[messages.length -1].content = respuesta['content'];
+                        }else{
+                          c.messages.push({
+                            id: uuidv4(),
+                            content: respuesta['content'],
+                            role: "assistant",
+                            loading: false,
+                            type: "text",
+                          });
+                        }
+                      }
+                    }
+                    return c;
+                  }),
+                }));
+              }
             });
             break;
 
@@ -1092,7 +1262,7 @@ export async function streamCompletion(
 export async function directResponse(messages: string[], api_key: string) {
   const response = await axios.post("https://api.openai.com/v1/chat/completions", {
     stream: false,
-    model: "gpt-3.5-turbo",
+    model: "gpt-4-turbo",
     messages
   }, {
     headers: {

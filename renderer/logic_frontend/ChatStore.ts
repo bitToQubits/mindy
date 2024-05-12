@@ -95,7 +95,7 @@ export const defaultSettings = {
 
 export interface ChatState {
   apiState: APIState;
-  apiKey: string | "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";
+  apiKey: string | "sk-proj-o7kd4yKFOE1W9pBOl3wDT3BlbkFJdBVp9VgpSEjiMdcDhmDq";
   apiKey11Labs: string | undefined;
   apiKeyAzure: string | undefined;
   apiKeyAzureRegion: string | undefined;
@@ -142,7 +142,7 @@ export interface ChatState {
 }
 export const initialState = {
   apiState: "idle" as APIState,
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || "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",
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || "sk-proj-o7kd4yKFOE1W9pBOl3wDT3BlbkFJdBVp9VgpSEjiMdcDhmDq",
   apiKey11Labs: process.env.NEXT_PUBLIC_11LABS_API_KEY || "219171ffe1d5a59c4de9d4701090af89",
   apiKeyAzure: process.env.NEXT_PUBLIC_AZURE_API_KEY || undefined,
   apiKeyAzureRegion: process.env.NEXT_PUBLIC_AZURE_REGION || undefined,
