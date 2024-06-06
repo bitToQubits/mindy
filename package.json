@@ -33,7 +33,7 @@
     "node-pandoc": "^0.3.0",
     "openai": "^4.38.2",
     "opus-encdec": "^0.1.1",
-    "playwright": "^1.44.0",
+    "playwright": "^1.44.1",
     "playwright-extra": "^4.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react-copy-to-clipboard": "^5.1.0",

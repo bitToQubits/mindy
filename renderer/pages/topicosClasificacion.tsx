@@ -34,7 +34,7 @@ export default function Page(){
                     onClick={() => eliminarTodosLosTopicos()}
                 >
                     <IconTrash size={14} />
-                    <span style={{ marginLeft: '10px' }}>Remove all topics</span>
+                    <span style={{ marginLeft: '10px' }}>Remover todos los tópicos</span>
                 </Button>
             </Grid.Col>
             }

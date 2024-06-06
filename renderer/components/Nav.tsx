@@ -174,7 +174,7 @@ export default function NavbarSimple() {
       </a>
       {chat.id === activeChatId && (
         <>
-          <Tooltip label="Delete" withArrow position="right">
+          <Tooltip label="Eliminar" withArrow position="right">
             <a
               href="#"
               onClick={(event) => {
@@ -202,7 +202,7 @@ export default function NavbarSimple() {
               </ActionIcon>
             </a>
           </Tooltip>
-          <Tooltip label="Edit" withArrow position="right">
+          <Tooltip label="Editar" withArrow position="right">
             <a
               href="#"
               onClick={(event) => {
@@ -261,7 +261,7 @@ export default function NavbarSimple() {
             }}
           >
             <IconPlus className={classes.linkIcon} stroke={1.5} />
-            <span>New Chat</span>
+            <span>Nuevo Chat</span>
             <MediaQuery largerThan="sm" styles={{ display: "none" }}>
               <Burger
                 opened={navOpened}
@@ -298,7 +298,7 @@ export default function NavbarSimple() {
         }>
           <>
               <IconBooks className={classes.linkIcon} stroke={1.5} />
-              <span>Mind Module</span>
+              <span>Módulo mental</span>
           </>
         </a>
 
@@ -316,7 +316,7 @@ export default function NavbarSimple() {
       <Modal
         opened={openedTitleModal}
         onClose={closeTitleModal}
-        title="Set Chat Title"
+        title="Reescribir título de chat"
       >
         <TextInput
           ref={editTitleInputRef}

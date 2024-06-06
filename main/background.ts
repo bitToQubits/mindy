@@ -182,6 +182,24 @@ ipcMain.on('create_note', async (event, argumentos) => {
         await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
       }
 
+    }else if(await page.getByText('Sign in').isVisible()){
+      await page.getByText('Sign in').click();
+
+      await page.locator('[type="email"]').fill("testeomindy@gmail.com");
+      await page.locator('[type="email"]').press('Enter');
+
+      await page.waitForTimeout(4000);
+  
+      await page.locator('[type="password"]').fill('claveMindyTest07');
+      await page.locator('[type="password"]').press('Enter');
+
+      await page.waitForTimeout(3000);
+
+      if(await page.getByText('Elige el método de acceso:').isVisible()){
+        await page.getByText('Confirma el correo de recuperación').click();
+        await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+        await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+      }
     }
 
     const textarea = await page.locator("[role='textbox']")
@@ -343,10 +361,17 @@ ipcMain.on('create_note', async (event, argumentos) => {
 
 ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
 
-    const title = argumentos.title;
-    const description = argumentos.description;
-    const startTime = argumentos.startTime;
-    const endTime = argumentos.endTime;
+    // const title = argumentos.title;
+    // const description = argumentos.description;
+    // const startTime = argumentos.startTime;
+    // const endTime = argumentos.endTime;
+
+    const title = "Evento de prueba Mindy";
+    const description = "Este es un evento de prueba creado por Mindy.";
+    const startTime = "2022-06-01T10:00:00-04:00";
+    const endTime = "2022-06-01T11:00:00-04:00";
+
+    console.log("nooo");
     
     const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\dhq95odj.default-default';
 
@@ -404,6 +429,24 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
           await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
         }
   
+      }else if(await page.getByText('Sign in').isVisible()){
+        await page.getByText('Sign in').click();
+  
+        await page.locator('[type="email"]').fill("testeomindy@gmail.com");
+        await page.locator('[type="email"]').press('Enter');
+  
+        await page.waitForTimeout(4000);
+    
+        await page.locator('[type="password"]').fill('claveMindyTest07');
+        await page.locator('[type="password"]').press('Enter');
+  
+        await page.waitForTimeout(3000);
+  
+        if(await page.getByText('Elige el método de acceso:').isVisible()){
+          await page.getByText('Confirma el correo de recuperación').click();
+          await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+          await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+        }
       }
 
       const createButton = await page.waitForSelector('[data-is-column-view-context="true"]');
@@ -458,6 +501,7 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
       event.reply('create_event_google_calendar', respuesta);
 
     }).catch((e) => {
+      console.log("Error" + e);
       respuesta.content += ": " + e;
       event.reply('create_event_google_calendar', respuesta);
     });
@@ -465,9 +509,15 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
 
 ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
 
-  const title = argumentos.title;
-  const description = (argumentos.description) ? argumentos.description : "";
-  const dueDate = (argumentos.dueDate) ? argumentos.dueDate : "";
+  // const title = argumentos.title;
+  // const description = (argumentos.description) ? argumentos.description : "";
+  // const dueDate = (argumentos.dueDate) ? argumentos.dueDate : "";
+
+  console.log("yess");
+
+  const title = "Tarea de prueba Mindy";
+  const description = "Esta es una tarea de prueba creada por Mindy.";
+  const dueDate = "2022-06-01";
 
   const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\dhq95odj.default-default';
 
@@ -500,8 +550,6 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
     
     //add init script
     await browser.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
-
-    browser.addCookies([{name:"csrftoken", value: "mytokenvalue123", url: "your.application.url"}]);
   
     const page = await browser.newPage();
 
@@ -527,6 +575,24 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
         await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
       }
 
+    }else if(await page.getByText('Sign in').isVisible()){
+      await page.getByText('Sign in').click();
+
+      await page.locator('[type="email"]').fill("testeomindy@gmail.com");
+      await page.locator('[type="email"]').press('Enter');
+
+      await page.waitForTimeout(4000);
+  
+      await page.locator('[type="password"]').fill('claveMindyTest07');
+      await page.locator('[type="password"]').press('Enter');
+
+      await page.waitForTimeout(3000);
+
+      if(await page.getByText('Elige el método de acceso:').isVisible()){
+        await page.getByText('Confirma el correo de recuperación').click();
+        await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+        await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+      }
     }
 
     const createButton = await page.locator('[data-is-column-view-context="true"]');

@@ -135,7 +135,7 @@ export default ({ message, className }: Props) => {
 
   return (
     <div className={cx(className, classes.container)}>
-      <p><b>{message.role === "assistant" ? "Mindy" : "You"}</b></p>
+      <p><b>{message.role === "assistant" ? "Mindy" : "Tú"}</b></p>
       <div className={cx(classes.message, message.loading && classes.loading)}>
         <Markdown
           options={{

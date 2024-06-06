@@ -3,5 +3,5 @@ node_modules
 .next
 app
 dist
-/renderer/public/images/classifiers
+/renderer/public/images/classifiers/*.png
 *.pdf

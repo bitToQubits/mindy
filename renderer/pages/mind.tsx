@@ -13,8 +13,8 @@ import {
   import classes from '../css/ActionsGrid.module.css';
   
   const mockdata = [
-    { title: 'Knowledge Graph', icon: IconTopologyStarRing3, color: 'indigo', href: '/bankKnowledge' },
-    { title: 'Data Classification', icon: IconBooks, color: 'red', href: '/topicosClasificacion' },
+    { title: 'Grafo de conocimiento', icon: IconTopologyStarRing3, color: 'indigo', href: '/bankKnowledge' },
+    { title: 'Clasificación de data', icon: IconBooks, color: 'red', href: '/topicosClasificacion' },
   ];
   
   export default function Page(){
@@ -43,7 +43,7 @@ import {
   
     return (
         <Container {...demoProps}>
-            <Text className={classes.title} ta="center" mb="3em">Mind Module</Text>
+            <Text className={classes.title} ta="center" mb="3em">Módulo mental</Text>
             <SimpleGrid cols={2}>
                 {items}
             </SimpleGrid>

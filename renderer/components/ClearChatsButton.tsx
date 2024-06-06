@@ -33,11 +33,11 @@ const ClearChatsButton: React.FC<Props> = ({ clearHandler, classes }) => {
         awaitingConfirmation
           ? <>
               <IconCheck className={classes.linkIcon} stroke={1.5} />
-              <span>Confirm Clear Chats</span>
+              <span>Confirmar limpiar chats</span>
             </>
           : <>
               <IconTrash className={classes.linkIcon} stroke={1.5} />
-              <span>Clear Chats</span>
+              <span>Limpiar chats</span>
             </>
       }
     </a>

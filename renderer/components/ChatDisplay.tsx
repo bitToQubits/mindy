@@ -31,7 +31,7 @@ const ChatDisplay = () => {
     setActiveChatId(activeChatId as string | undefined);
   }, [activeChatId]);
 
-  const [text, setText] = useState('Your friend, only better.');
+  const [text, setText] = useState('Tu amigo, pero mejor.');
 
   const viewport = useRef<HTMLDivElement>(null);
 
@@ -117,18 +117,20 @@ const ChatDisplay = () => {
       if(event.key == "k"){
         if (audioState === "idle") {
           Recorder.startRecording();
-          setText('I am hearing you.');
+          setText('Te escucho.');
           setColor('red');
         } else if (audioState === "transcribing") {
           return;
         }
+      }else if (event.key == "l"){
+        window.ipc.send('create_event_google_calendar', {});
       }
     };
     
     const handleKeyUp = (event) => {
       if(event.key == "k"){
         Recorder.stopRecording(true);
-        setText('Your friend, only better.');
+        setText('Tu amigo, pero mejor.');
         setColor('white');
       }
     };
@@ -200,7 +202,7 @@ const ChatDisplay = () => {
       }
 
       uniforms.u_time.value = clock.getElapsedTime();
-      // uniforms.u_frequency.value = analyser.getAverageFrequency();
+      uniforms.u_frequency.value = analyser.getAverageFrequency();
       bloomComposer.render();
     }
 
@@ -389,7 +391,7 @@ const ChatDisplay = () => {
 
       mediaElement = mediaElement || sound.setMediaElementSource(audioElement);
 
-      // analyser = new THREE.AudioAnalyser(sound, 32);
+      analyser = new THREE.AudioAnalyser(sound, 32);
 
       uniforms.u_red.value = 1;
       uniforms.u_green.value = 0;

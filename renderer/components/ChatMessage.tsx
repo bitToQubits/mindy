@@ -195,7 +195,7 @@ export default function ChatDisplay({ message }: { message: Message }) {
             {
             message.type == "image" && 
               <div className={cx(classes.containerImage, classes.messageDisplay)}>
-                <p><b>{message.role === "assistant" ? "Mindy" : "You"}</b></p>
+                <p><b>{message.role === "assistant" ? "Mindy" : "Tú"}</b></p>
                 <Image src={message.content} alt={message.id} />
               </div>
             }

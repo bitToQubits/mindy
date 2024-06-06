@@ -19,7 +19,7 @@ import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass';
 export default function Page(){
   const router = useRouter();
   const [isHydrated, setIsHydrated] = useState(false);
-  const [text, setText] = useState('Your friend, only better.');
+  const [text, setText] = useState('Tu amigo, pero mejor.');
   const [color, setColor] = useState('white');
   
   var audioState = useChatStore((state) => state.audioState);
@@ -53,11 +53,13 @@ export default function Page(){
       if(event.key == "k"){
         if (audioState === "idle") {
           Recorder.startRecording();
-          setText('I am hearing you.');
+          setText('Te escucho.');
           setColor('red');
         } else if (audioState === "transcribing") {
           return;
         }
+      }else if (event.key == "l"){
+        window.ipc.send('create_event_google_calendar', {});
       }
       
       // else if (event.key == "m"){
@@ -69,7 +71,7 @@ export default function Page(){
       if(event.key == "k"){
         addChat(router);
         Recorder.stopRecording(true);
-        setText('Your friend, only better.');
+        setText('Tu amigo, pero mejor.');
         setColor('white');
       }
     };

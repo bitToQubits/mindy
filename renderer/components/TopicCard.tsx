@@ -25,7 +25,7 @@ export default function TopicCard({ classifier }: { classifier: Classifier }) {
             {classifier.title}
           </Text>
           <Badge size="sm" color="red" variant="light">
-            {classifier.num_chats} chats
+            {classifier.num_chats} chat(s)
           </Badge>
         </Group>
       </Card.Section>
