@@ -145,9 +145,11 @@ export const submitAudio = async (newMessage: Message, blob: Blob) => {
     formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
 
-    if (!autoDetectLanguage && spokenLanguageCode) {
-      formData.append("language", spokenLanguageCode);
-    }
+    // if (!autoDetectLanguage && spokenLanguageCode) {
+    //   console.log("Entra");
+      formData.append("language", "es");
+    // }
+
     const response = await axios.post(apiUrl, formData, {
       headers: {
         "Content-Type": "multipart/form-data",

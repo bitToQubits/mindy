@@ -1262,7 +1262,7 @@ export async function streamCompletion(
 export async function directResponse(messages: string[], api_key: string) {
   const response = await axios.post("https://api.openai.com/v1/chat/completions", {
     stream: false,
-    model: "gpt-4-turbo",
+    model: "gpt-4o",
     messages
   }, {
     headers: {

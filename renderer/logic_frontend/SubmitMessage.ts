@@ -112,7 +112,7 @@ export const submitMessage = async (message: Message) => {
 
   var settings = get().settingsForm;
 
-  settings.model = "gpt-4-turbo";
+  settings.model = "gpt-4o";
 
   const abortController = new AbortController();
   set((state) => ({

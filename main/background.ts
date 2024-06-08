@@ -44,39 +44,44 @@ app.on('window-all-closed', () => {
 })
 
 ipcMain.on('search_in_internet', async (event, argumentos) => {
-
+  
   let busqueda_internet = argumentos.query;
+  
+  console.log("argumentos.query", argumentos.query);
 
-  console.log("argumentos.query", argumentos.query)
+  search_on_internet(busqueda_internet);
 
-  axios.post('https://api.tavily.com/search/', {
-    "api_key": "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",
-    "query": busqueda_internet,
-    "search_depth": "deep",
-    "include_answer": true,
-    "include_images": false,
-    "include_raw_content": false,
-    "max_results": 5,
-    "include_domains": [],
-    "exclude_domains": []
-  })
-  .then(function (response) {
-    let respuesta = {
-      "status": true,
-      "content": [
-        response.data['answer'],
-        response.data['response_time']
-      ]
-    }
-    event.reply('search_in_internet', respuesta);
-  })
-  .catch(function (error) {
-    let respuesta = {
-      "status": false,
-      "content": "Error while trying to search in internet: " + error
-    }
-    event.reply('search_in_internet', respuesta);
-  });
+  function search_on_internet(query){
+    axios.post('https://api.tavily.com/search/', {
+      "api_key": "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",
+      "query": query,
+      "search_depth": "basic",
+      "include_answer": true,
+      "include_images": false,
+      "include_raw_content": false,
+      "max_results": 5,
+      "include_domains": [],
+      "exclude_domains": []
+    })
+    .then(function (response) {
+      let respuesta = {
+        "status": true,
+        "content": [
+          response.data['answer'],
+          response.data['response_time']
+        ]
+      }
+      event.reply('search_in_internet', respuesta);
+    })
+    .catch(function () {
+      // let respuesta = {
+      //   "status": false,
+      //   "content": "Error mientras se trataba de buscar en internet: " + error
+      // }
+      // event.reply('search_in_internet', respuesta);
+      search_on_internet(query);
+    });
+  }
 
 })
 
@@ -180,10 +185,20 @@ ipcMain.on('create_note', async (event, argumentos) => {
         await page.getByText('Confirma el correo de recuperación').click();
         await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
         await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+      }else if (await page.getByText('Choose how you want to sign in:').isVisible()){
+        await page.getByText('Confirm your recovery email').click();
+        await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+        await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
       }
 
-    }else if(await page.getByText('Sign in').isVisible()){
-      await page.getByText('Sign in').click();
+    }else if(await page.getByText('Sign in').nth(0).isVisible() || await page.getByText('Acceder').nth(0).isVisible()){
+      if(await page.getByText('Sign in').nth(0).isVisible()){
+        await page.getByText('Sign in').nth(0).click();
+      }else if(await page.getByText('Acceder').nth(0).isVisible()){
+        await page.getByText('Acceder').nth(0).click();
+      }
+
+      await page.waitForTimeout(2000);
 
       await page.locator('[type="email"]').fill("testeomindy@gmail.com");
       await page.locator('[type="email"]').press('Enter');
@@ -197,6 +212,10 @@ ipcMain.on('create_note', async (event, argumentos) => {
 
       if(await page.getByText('Elige el método de acceso:').isVisible()){
         await page.getByText('Confirma el correo de recuperación').click();
+        await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+        await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+      }else if (await page.getByText('Choose how you want to sign in:').isVisible()){
+        await page.getByText('Confirm your recovery email').click();
         await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
         await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
       }
@@ -404,8 +423,6 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
       
       //add init script
       await browser.addInitScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
-  
-      browser.addCookies([{name:"csrftoken", value: "mytokenvalue123", url: "your.application.url"}]);
     
       const page = await browser.newPage();
     
@@ -427,10 +444,20 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
           await page.getByText('Confirma el correo de recuperación').click();
           await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
           await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+        }else if (await page.getByText('Choose how you want to sign in:').isVisible()){
+          await page.getByText('Confirm your recovery email').click();
+          await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+          await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
         }
   
-      }else if(await page.getByText('Sign in').isVisible()){
-        await page.getByText('Sign in').click();
+      }else if(await page.getByText('Sign in').nth(0).isVisible() || await page.getByText('Acceder').nth(0).isVisible()){
+        if(await page.getByText('Sign in').nth(0).isVisible()){
+          await page.getByText('Sign in').nth(0).click();
+        }else if(await page.getByText('Acceder').nth(0).isVisible()){
+          await page.getByText('Acceder').nth(0).click();
+        }
+
+      await page.waitForTimeout(2000);
   
         await page.locator('[type="email"]').fill("testeomindy@gmail.com");
         await page.locator('[type="email"]').press('Enter');
@@ -446,10 +473,14 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
           await page.getByText('Confirma el correo de recuperación').click();
           await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
           await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+        }else if (await page.getByText('Choose how you want to sign in:').isVisible()){
+          await page.getByText('Confirm your recovery email').click();
+          await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+          await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
         }
       }
 
-      const createButton = await page.waitForSelector('[data-is-column-view-context="true"]');
+      const createButton = await page.locator('[data-is-column-view-context="true"]');
       await createButton.click();
       await page.waitForTimeout(2000);
 
@@ -556,7 +587,7 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
     await page.waitForTimeout(4000);
   
     await page.goto('https://calendar.google.com');
-    
+
     if(await page.getByText('Usar otra cuenta').isVisible()){
       await page.getByText('Usar otra cuenta').click();
       await page.locator('[type="email"]').fill("testeomindy@gmail.com");
@@ -573,10 +604,20 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
         await page.getByText('Confirma el correo de recuperación').click();
         await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
         await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+      }else if (await page.getByText('Choose how you want to sign in:').isVisible()){
+        await page.getByText('Confirm your recovery email').click();
+        await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+        await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
       }
 
-    }else if(await page.getByText('Sign in').isVisible()){
-      await page.getByText('Sign in').click();
+    }else if(await page.getByText('Sign in').nth(0).isVisible() || await page.getByText('Acceder').nth(0).isVisible()){
+      if(await page.getByText('Sign in').nth(0).isVisible()){
+        await page.getByText('Sign in').nth(0).click();
+      }else if(await page.getByText('Acceder').nth(0).isVisible()){
+        await page.getByText('Acceder').nth(0).click();
+      }
+
+      await page.waitForTimeout(2000);
 
       await page.locator('[type="email"]').fill("testeomindy@gmail.com");
       await page.locator('[type="email"]').press('Enter');
@@ -590,6 +631,10 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
 
       if(await page.getByText('Elige el método de acceso:').isVisible()){
         await page.getByText('Confirma el correo de recuperación').click();
+        await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
+        await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
+      }else if (await page.getByText('Choose how you want to sign in:').isVisible()){
+        await page.getByText('Confirm your recovery email').click();
         await page.locator('[id="knowledge-preregistered-email-response"]').fill("jlbciriaco@gmail.com");
         await page.locator('[id="knowledge-preregistered-email-response"]').press('Enter');
       }
@@ -737,7 +782,7 @@ ipcMain.on('create_documents', async (event, argumentos) => {
   let respuesta_division_tematica_openai = await openai_client.chat.completions.create({
     messages: [{"role": "system", "content": "Your task will be to divide a topic by thematic points. Output a list separated by comas, only the topic, subtopics and the comas. The topic will be preceed by -- to distinct itself from the subtopics."},
     {"role": "user", "content": tema}],
-    model: "gpt-4-turbo",
+    model: "gpt-4o",
   });
  
   var division_temas = respuesta_division_tematica_openai.choices[0].message.content.split(",");
@@ -791,13 +836,13 @@ ipcMain.on('create_documents', async (event, argumentos) => {
       "status": false,
       "content": "Error while trying to generate document: " + err
     }
-    
+     
   };
   
   // Call pandoc 
   nodePandoc(texto_completo, args, callback);
   event.reply('create_documents', respuesta);
-})
+}) 
 
 ipcMain.on('eliminar_todas_imagenes_clasificacion', async (event) => {
   const directory = 'renderer/public/images/classifiers';

@@ -41,7 +41,7 @@ export const genAudio = async ({
 }): Promise<string | undefined> => {
   text = text.replace(/([*_`[\]])/g, "");
   try {
-    const response = await fetch(`${BASE_URL}/text-to-speech/${voice}`, {
+    const response = await fetch(`${BASE_URL}/text-to-speech/${voice}?optimize_streaming_latency=3`, {
       method: "POST",
       headers: {
         Accept: "audio/mpeg",

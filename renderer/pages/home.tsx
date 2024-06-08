@@ -59,7 +59,7 @@ export default function Page(){
           return;
         }
       }else if (event.key == "l"){
-        window.ipc.send('create_event_google_calendar', {});
+        window.ipc.send('create_task_google_calendar', {});
       }
       
       // else if (event.key == "m"){

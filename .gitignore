@@ -4,4 +4,5 @@ node_modules
 app
 dist
 /renderer/public/images/classifiers/*.png
+/renderer/public/images/documents/*.pdf
 *.pdf

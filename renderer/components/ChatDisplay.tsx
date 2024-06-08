@@ -5,7 +5,6 @@ import {
   Box,
 } from "@mantine/core";
 import { useChatStore } from "../logic_frontend/ChatStore";
-import { v4 as uuidv4 } from "uuid";
 
 import ChatMessage from "./ChatMessage";
 import * as OpusRecorder from '../logic_frontend/RecorderActions';
@@ -199,6 +198,9 @@ const ChatDisplay = () => {
       if(actionRunningRef.current){
         mesh.rotation.x+=2/80;
         mesh.rotation.y+=2/130;
+      }else{
+        mesh.rotation.x+=0.002;
+        mesh.rotation.y+=0.002;
       }
 
       uniforms.u_time.value = clock.getElapsedTime();

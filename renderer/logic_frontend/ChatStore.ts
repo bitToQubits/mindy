@@ -64,7 +64,7 @@ interface SettingsForm {
 }
 
 export const defaultSettings = {
-  model: "gpt-4-turbo",
+  model: "gpt-4o",
   temperature: 1,
   top_p: 1,
   n: 1,
@@ -75,7 +75,7 @@ export const defaultSettings = {
   logit_bias: "",
   auto_title: true,
   // Whisper
-  auto_detect_language: false,
+  auto_detect_language: true,
   spoken_language: "English (en)",
   spoken_language_code: "en",
   // OpenAI TTS
