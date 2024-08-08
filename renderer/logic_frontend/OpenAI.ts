@@ -267,7 +267,7 @@ export async function streamCompletion(
       type: "function",
       function: {
         name: "create_note",
-        description: "Create notes on Google Calendar from wikipedia articles. ",
+        description: "Create notes on Google Calendar from wikipedia articles. ONLY trigger this function when the user ASK TO CREATE A NOTE.",
         parameters: {
           type: "object",
           properties: {
@@ -434,18 +434,18 @@ export async function streamCompletion(
             window.ipc.send('generate_image', sum);
 
             notifications.show({
-              title: "Action started",
-              message: "Creating images from text",
+              title: "Acción iniciada",
+              message: "Creación de imágenes a partir de texto",
               color: "red",
             });
 
-            set((state) => ({
+            set(() => ({
               actionRunning: true,
             })); 
 
             window.ipc.on('generate_image', (respuesta) => {
 
-              set((state) => ({
+              set(() => ({
                 actionRunning: false,
               }));
 
@@ -479,7 +479,7 @@ export async function streamCompletion(
                 }
 
                 notifications.show({
-                  title: "Action completed",
+                  title: "Acción completada",
                   message: respuesta['content'][0],
                   color: "green",
                 });
@@ -494,11 +494,11 @@ export async function streamCompletion(
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "Error while trying to create some images.";
+                          c.messages[messages.length -1].content = "Error al intentar crear algunas imágenes.";
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "Error while trying to create some images.",
+                            content: "Error al intentar crear algunas imágenes.",
                             role: "assistant",
                             loading: false,
                             type: "text",
@@ -525,24 +525,24 @@ export async function streamCompletion(
             window.ipc.send('create_event_google_calendar', sum);
 
             notifications.show({
-              title: "Action started",
-              message: "Creating event in Google Calendar",
+              title: "Acción iniciada",
+              message: "Creación de eventos en Google Calendar",
               color: "red",
             });
 
-            set((state) => ({
+            set(() => ({
               actionRunning: true,
             }));
 
             window.ipc.on('create_event_google_calendar', (respuesta) => {
 
-              set((state) => ({
+              set(() => ({
                 actionRunning: false,
               }));
 
               if(respuesta['status'] == true){
                 notifications.show({
-                  title: "Action completed",
+                  title: "Acción completada",
                   message: respuesta['content'],
                   color: "green",
                 });
@@ -585,11 +585,11 @@ export async function streamCompletion(
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "Error while trying to create a Google Event";
+                          c.messages[messages.length -1].content = "Error al intentar crear un evento de Google";
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "Error while trying to create a Google Event",
+                            content: "Error al intentar crear un evento de Google",
                             role: "assistant",
                             loading: false,
                             type: "text",
@@ -610,24 +610,24 @@ export async function streamCompletion(
             window.ipc.send('create_task_google_calendar', sum);
 
             notifications.show({
-              title: "Action started",
-              message: "Creating task in Google Calendar",
+              title: "Acción iniciada",
+              message: "Creación de tareas en Google Calendar",
               color: "red",
             });
 
-            set((state) => ({
+            set(() => ({
               actionRunning: true,
             }));
 
             window.ipc.on('create_task_google_calendar', (respuesta) => {
 
-              set((state) => ({
+              set(() => ({
                 actionRunning: false,
               }));
 
               if(respuesta['status'] == true){
                 notifications.show({
-                  title: "Action completed",
+                  title: "Acción completada",
                   message: respuesta['content'],
                   color: "green",
                 });
@@ -665,16 +665,16 @@ export async function streamCompletion(
                 //Obtener el ultimo mensaje del chat y adjuntarle la respuesta
                 const activeChatId = get().activeChatId;
                 set((state) => ({
-                  ttsText: (state.ttsText || "") + "Error while trying to create a Google Task",
+                  ttsText: (state.ttsText || "") + "Error al intentar crear una tarea de Google",
                   chats: state.chats.map((c) => {
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "Error while trying to create a Google Task";
+                          c.messages[messages.length -1].content = "Error al intentar crear una tarea de Google";
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "Error while trying to create a Google Task",
+                            content: "Error al intentar crear una tarea de Google",
                             role: "assistant",
                             loading: false,
                             type: "text",
@@ -695,24 +695,24 @@ export async function streamCompletion(
             window.ipc.send('create_documents', sum);
 
             notifications.show({
-              title: "Action started",
-              message: "Creating document from prompt",
+              title: "Acción iniciada",
+              message: "Creación de un documento a partir de una descripción",
               color: "red",
             });
 
-            set((state) => ({
+            set(() => ({
               actionRunning: true,
             }));
 
             window.ipc.on('create_documents', (respuesta) => {
 
-              set((state) => ({
+              set(() => ({
                 actionRunning: false,
               }));
 
               if(respuesta['status'] == true){
                 notifications.show({
-                  title: "Action completed",
+                  title: "Acción completada",
                   message: respuesta['content'],
                   color: "green",
                 });
@@ -755,11 +755,11 @@ export async function streamCompletion(
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "Error while trying to create a document";
+                          c.messages[messages.length -1].content = "Error al intentar crear un documento";
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "Error while trying to create a document",
+                            content: "Error al intentar crear un documento",
                             role: "assistant",
                             loading: false,
                             type: "text",
@@ -780,24 +780,24 @@ export async function streamCompletion(
             window.ipc.send('create_note', sum);
 
             notifications.show({
-              title: "Action started",
-              message: "Creating note from source",
+              title: "Acción iniciada",
+              message: "Creación de una nota desde una fuente",
               color: "red",
             });
 
-            set((state) => ({
+            set(() => ({
               actionRunning: true,
             }));
             
             window.ipc.on('create_note', (respuesta) => {
 
-              set((state) => ({
+              set(() => ({
                 actionRunning: false,
               }));
 
               if(respuesta['status'] == true){
                 notifications.show({
-                  title: "Action completed",
+                  title: "Acción completada",
                   message: respuesta['content'],
                   color: "green",
                 });
@@ -810,11 +810,11 @@ export async function streamCompletion(
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "Note created successfully";
+                          c.messages[messages.length -1].content = "Nota creada con éxito";
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "Note created successfully",
+                            content: "Nota creada con éxito",
                             role: "assistant",
                             loading: false,
                             type: "text",
@@ -840,11 +840,11 @@ export async function streamCompletion(
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "Error while trying to create a note";
+                          c.messages[messages.length -1].content = "Error al intentar crear una nota";
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "Error while trying to create a note",
+                            content: "Error al intentar crear una nota",
                             role: "assistant",
                             loading: false,
                             type: "text",
@@ -865,8 +865,8 @@ export async function streamCompletion(
             window.ipc.send('search_in_internet', sum);
 
             notifications.show({
-              title: "Action started",
-              message: "Searching in internet",
+              title: "Acción iniciada",
+              message: "Búsqueda en internet",
               color: "red",
             });
 
@@ -882,8 +882,8 @@ export async function streamCompletion(
 
               if(respuesta['status'] == true){
                 notifications.show({
-                  title: "Action completed",
-                  message: "Internet search completed successfully in "+respuesta['content'][1]+" ms",
+                  title: "Acción completada",
+                  message: "Búsqueda en Internet completada con éxito en "+respuesta['content'][1]+" ms",
                   color: "green",
                 });
 
@@ -923,12 +923,11 @@ export async function streamCompletion(
             break;
           case "search_and_analyze_image":
             window.ipc.send('search_and_analyze_image', sum);
-            console.log("llega a enviarse pero no llega")
-            set((state) => ({
+            set(() => ({
               actionRunning: true,
             }));
             window.ipc.on('search_and_analyze_image', (respuesta) => {
-              set((state) => ({
+              set(() => ({
                 actionRunning: false,
               }));
 
@@ -936,16 +935,16 @@ export async function streamCompletion(
                 //Obtener el ultimo mensaje del chat y adjuntarle la respuesta
                 const activeChatId = get().activeChatId;
                 set((state) => ({
-                  ttsText: (state.ttsText || "") + "Image searched on the computer successfully",
+                  ttsText: (state.ttsText || "") + "Imagen buscada con éxito en el ordenador",
                   chats: state.chats.map((c) => {
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "Image searched on the computer successfully";
+                          c.messages[messages.length -1].content = "Imagen analizada en el ordenador con éxito";
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "Image searched on the computer successfully",
+                            content: "Imagen analizada en el ordenador con éxito",
                             role: "assistant",
                             loading: false,
                             type: "text",
@@ -985,11 +984,11 @@ export async function streamCompletion(
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "Error while trying to search and analyze the image";
+                          c.messages[messages.length -1].content = "Error al intentar buscar y analizar la imagen";
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "Error while trying to search and analyze the image",
+                            content: "Error al intentar buscar y analizar la imagen",
                             role: "assistant",
                             loading: false,
                             type: "text",
@@ -1124,16 +1123,16 @@ export async function streamCompletion(
             if(founded){
               console.log("VOICE SUCESSFULLY CHANGED")
               set((state) => ({
-                ttsText: (state.ttsText || "") + "Voice changed successfully to "+voice,
+                ttsText: (state.ttsText || "") + "Voz cambiada correctamente a "+voice,
                 chats: state.chats.map((c) => {
                   if (c.id === activeChatId) {
                     if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                       if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                        c.messages[messages.length -1].content = "Voice changed to "+voice;
+                        c.messages[messages.length -1].content = "Voz cambió a "+voice;
                       }else{
                         c.messages.push({
                           id: uuidv4(),
-                          content: "Voice changed to "+voice,
+                          content: "Voz cambió a "+voice,
                           role: "assistant",
                           loading: false,
                           type: "text",
@@ -1150,11 +1149,11 @@ export async function streamCompletion(
                   if (c.id === activeChatId) {
                     if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                       if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                        c.messages[messages.length -1].content = "Error while trying to change the voice";
+                        c.messages[messages.length -1].content = "Error al intentar cambiar la voz";
                       }else{
                         c.messages.push({
                           id: uuidv4(),
-                          content: "Error while trying to change the voice",
+                          content: "Error al intentar cambiar la voz",
                           role: "assistant",
                           loading: false,
                           type: "text",
@@ -1198,11 +1197,11 @@ export async function streamCompletion(
                     if (c.id === activeChatId) {
                       if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                         if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
-                          c.messages[messages.length -1].content = "I showed to you the document";
+                          c.messages[messages.length -1].content = "Document showed successfully";
                         }else{
                           c.messages.push({
                             id: uuidv4(),
-                            content: "I showed to you the document",
+                            content: "Document showed successfully",
                             role: "assistant",
                             loading: false,
                             type: "text",

@@ -31,12 +31,12 @@ if (isProd) {
   })
 
   if (isProd) {
-    await mainWindow.loadURL('app://./home');
+    await mainWindow.loadURL('app://./admin_tareas');
   } else {
     const port = process.argv[2];
-    await mainWindow.loadURL(`http://localhost:${port}/home`);
+    await mainWindow.loadURL(`http://localhost:${port}/admin_tareas`);
     mainWindow.webContents.openDevTools()
-  }
+  } 
 })()
 
 app.on('window-all-closed', () => {
@@ -54,7 +54,7 @@ ipcMain.on('search_in_internet', async (event, argumentos) => {
   function search_on_internet(query){
     axios.post('https://api.tavily.com/search/', {
       "api_key": "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",
-      "query": query,
+      "query": "Responde en español: " + query,
       "search_depth": "basic",
       "include_answer": true,
       "include_images": false,
@@ -303,7 +303,7 @@ ipcMain.on('create_note', async (event, argumentos) => {
 
   const page = await browser.newPage();
 
-  await page.goto('https://en.wikipedia.org/');
+  await page.goto('https://es.wikipedia.org/');
 
   await page.locator('[type="search"]').fill(termino);
 
@@ -314,7 +314,7 @@ ipcMain.on('create_note', async (event, argumentos) => {
   if(await page.isVisible(".searchResultImage-thumbnail")){
     await page.locator(".searchResultImage-thumbnail").click();
     await page.waitForTimeout(2000);
-  }else if (await page.getByText(termino+' may refer to:').isVisible()){
+  }else if (await page.getByText('Quizás quisiste decir').isVisible()){
     var enlaces = await page.locator("#mw-content-text a");
 
     for(var i = 0; i < await enlaces.count(); i++){
@@ -360,14 +360,14 @@ ipcMain.on('create_note', async (event, argumentos) => {
 
   let respuesta = {
     "status": false,
-    "content": "Error while trying to create note"
+    "content": "Error al intentar crear una nota"
   }
 
   if(output.length > 0){
     await crear_nota(termino, output, img).then(() => {
       respuesta = {
         "status": true,
-        "content": "Note created successfully"
+        "content": "Nota creada con éxito"
       }
    }).catch((e) => {
       respuesta.content += ": " + e;
@@ -380,17 +380,10 @@ ipcMain.on('create_note', async (event, argumentos) => {
 
 ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
 
-    // const title = argumentos.title;
-    // const description = argumentos.description;
-    // const startTime = argumentos.startTime;
-    // const endTime = argumentos.endTime;
-
-    const title = "Evento de prueba Mindy";
-    const description = "Este es un evento de prueba creado por Mindy.";
-    const startTime = "2022-06-01T10:00:00-04:00";
-    const endTime = "2022-06-01T11:00:00-04:00";
-
-    console.log("nooo");
+    const title = argumentos.title;
+    const description = argumentos.description;
+    const startTime = argumentos.startTime;
+    const endTime = argumentos.endTime;
     
     const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\dhq95odj.default-default';
 
@@ -519,20 +512,19 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
 
     let respuesta = {
       "status": false,
-      "content": "Error while trying to create event"
+      "content": "Error mientras se trataba de crear el evento"
     }
 
     createEvent(title, description, startTime, endTime).then(() => {
 
       respuesta = {
         "status": true,
-        "content": "Event created succesfully: "+title
+        "content": "Evento creado éxitosamente: "+title
       }
       
       event.reply('create_event_google_calendar', respuesta);
 
     }).catch((e) => {
-      console.log("Error" + e);
       respuesta.content += ": " + e;
       event.reply('create_event_google_calendar', respuesta);
     });
@@ -540,15 +532,9 @@ ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
 
 ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
 
-  // const title = argumentos.title;
-  // const description = (argumentos.description) ? argumentos.description : "";
-  // const dueDate = (argumentos.dueDate) ? argumentos.dueDate : "";
-
-  console.log("yess");
-
-  const title = "Tarea de prueba Mindy";
-  const description = "Esta es una tarea de prueba creada por Mindy.";
-  const dueDate = "2022-06-01";
+  const title = argumentos.title;
+  const description = (argumentos.description) ? argumentos.description : "";
+  const dueDate = (argumentos.dueDate) ? argumentos.dueDate : "";
 
   const userDataDir = 'C:\\Users\\'+os.userInfo().username+'\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\dhq95odj.default-default';
 
@@ -679,13 +665,13 @@ ipcMain.on('create_task_google_calendar', async (event, argumentos) => {
   createTask(title, description,dueDate).then(() => {
     let respuesta = {
       "status": true,
-      "content": "Task created succesfully: "+title
+      "content": "Tarea creada con éxito: "+title
     }
     event.reply('create_task_google_calendar', respuesta);
   }).catch((e) => {
     let respuesta = {
       "status": false,
-      "content": "Error while trying to create task: "+e
+      "content": "Error al intentar crear una tarea: "+e
     }
     event.reply('create_task_google_calendar', respuesta);
  })
@@ -738,7 +724,7 @@ ipcMain.on('generate_image', async (event, argumentos) => {
   let respuesta = {
     "status": false,
     "content": [
-      "Error while trying to generate image(s)",
+      "Error al intentar generar imágen(es)",
       []
     ]
   }
@@ -750,7 +736,7 @@ ipcMain.on('generate_image', async (event, argumentos) => {
     respuesta = {
       "status": true,
       "content": [
-        "Image(s) generated succesfully",
+        "Imagen(es) generada(s) con éxito",
         images
       ]
     }
@@ -811,7 +797,7 @@ ipcMain.on('create_documents', async (event, argumentos) => {
 
   tema = tema.replaceAll(" ", "_").toLowerCase();
 
-  const output_path = "./renderer/public/documents/"+tema+".pdf";
+  const output_path = "./"+tema+".pdf";
 
   // markdownpdf().from.string(texto_completo).to(output_path, function () {
   //   event.reply('generacion_documentos', tema);
@@ -824,9 +810,9 @@ ipcMain.on('create_documents', async (event, argumentos) => {
   // Arguments can be either a single string:
   args = '-f markdown -t pdf -o '+output_path+' --toc=true';
 
-  let respuesta = {
+  var respuesta = {
     "status": true,
-    "content": "Document created succesfully: ```" + tema + "```"
+    "content": "Documento creado con éxito: ```" + tema + "```"
   }
   
   // Set your callback function
@@ -834,8 +820,10 @@ ipcMain.on('create_documents', async (event, argumentos) => {
   
     respuesta = {
       "status": false,
-      "content": "Error while trying to generate document: " + err
+      "content": "Error al intentar generar un documento: " + err
     }
+
+    console.log("Error while trying to generate document: " + err.toString());
      
   };
   
@@ -853,14 +841,14 @@ ipcMain.on('eliminar_todas_imagenes_clasificacion', async (event) => {
     for (const file of files) {
       fs.unlink(path.join(directory, file), err => {
         if (err){
-          event.reply('eliminar_todas_imagenes_clasificacion', "Error while trying to remove images" + err);
+          event.reply('eliminar_todas_imagenes_clasificacion', "Error al intentar eliminar imágenes" + err);
         }
       });
     }
   }
   );
 
-  event.reply('eliminar_todas_imagenes_clasificacion', "All data classifications removed");
+  event.reply('eliminar_todas_imagenes_clasificacion', "Se han eliminado todas las clasificaciones de datos");
 }); 
 
 ipcMain.on('go_to_your_mind_palace', async (event) => {
@@ -878,7 +866,7 @@ ipcMain.on('show_document', async (event, argumentos) => {
   if(files.length == 0){
     let respuesta = {
       "status": false,
-      "content": "Document not founded."
+      "content": "Documento no encontrado."
     };
     event.reply('show_document', respuesta);
   }else{
@@ -887,7 +875,7 @@ ipcMain.on('show_document', async (event, argumentos) => {
     exec('start "" "renderer/public/documents/'+files[0]+'"');
     let respuesta = {
       "status": false,
-      "content": "Document showed successfully."
+      "content": "El documento se mostró con éxito."
     };
     //After 15 seconds close the pdf visualizer
     setTimeout(() => {

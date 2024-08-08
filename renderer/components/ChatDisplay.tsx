@@ -18,11 +18,13 @@ import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass';
 import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import {OutputPass} from 'three/examples/jsm/postprocessing/OutputPass';
 import AudioPlayer from "../components/AudioPlayer";
+import { toggleAudio } from "../logic_frontend/PlayerActions";
 
 const ChatDisplay = () => {
   const router = useRouter();
   const activeChatId = router.query.chatId as string | undefined;
   var actionRunning = useChatStore((state) => state.actionRunning);
+  var isPlaying = useChatStore((state) => state.playerState === "playing");
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
@@ -42,11 +44,8 @@ const ChatDisplay = () => {
   var activeChat = chats.find((chat) => chat.id === activeChatId);
 
   const [color, setColor] = useState('white');
-  const set = useChatStore.setState;
 
   const lastMessage = activeChat?.messages[activeChat.messages.length - 1];
-
-  console.log(lastMessage);
 
   const scrolledToBottom = () => {
     const winScroll =
@@ -65,12 +64,9 @@ const ChatDisplay = () => {
 
   var audioState = useChatStore((state) => state.audioState);
 
-  const ttsText = useChatStore((state) => state.ttsText);
-
   useEffect(() => {
     if (isScrolledToBottom) {
       scrollToBottom();
-      console.log("Debio de haber bajado")
     }
     
     const images = viewport.current?.getElementsByTagName('img');
@@ -80,8 +76,6 @@ const ChatDisplay = () => {
         img.onload = scrollToBottom;
       });
     }
-
-    console.log('scrolling to bottom', isScrolledToBottom);
     
   }, [isScrolledToBottom, activeChat, lastMessage?.content]);
 
@@ -154,6 +148,21 @@ const ChatDisplay = () => {
     actionRunningRef.current = actionRunning; // Update the ref value whenever actionRunning changes
   }, [actionRunning]);
 
+  useEffect(() => {
+    const detenerAudio = () => {
+      if(isPlaying){
+        toggleAudio();
+      }
+    }
+
+    if(document.getElementById('pechurina')){
+      document.getElementById('pechurina').style.cursor = (isPlaying) ? "pointer" : "default";
+      document.getElementById('pechurina').onclick = detenerAudio;
+    }
+
+  
+  }, [isPlaying]);
+
   let mediaElement;
   var camera;
   var uniforms;
@@ -208,7 +217,7 @@ const ChatDisplay = () => {
       bloomComposer.render();
     }
 
-    if(document.getElementById('pechurina') && document.querySelector('#pechurina').innerHTML == "" && document.querySelector('audio')){ 
+    if(false && document.getElementById('pechurina') && document.querySelector('#pechurina').innerHTML == "" && document.querySelector('audio')){ 
       renderer = new THREE.WebGLRenderer({antialias: true});
       tamanoMindyText = document.getElementById('mindyText')?.clientHeight + 20;
       largoReal = document.getElementById('contenedorGrafico')?.clientWidth;
@@ -414,8 +423,6 @@ const ChatDisplay = () => {
       router.push('/bankKnowledge');
       window?.ipc.off('go_to_your_mind_palace');
     });
-
-    console.log("ttstext", ttsText)
 
   }, [isHydrated]);
 
