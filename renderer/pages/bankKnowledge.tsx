@@ -2,13 +2,34 @@
 import {edges, nodes} from '../data/data';
 import Graph from 'react-vis-network-graph';
 import React from "react";
+import { useRouter } from "next/router";
 
 export default function Page(){
+
+    const router = useRouter();
 
     const [hydrated, setHydrated] = React.useState(false);
     
     React.useEffect(() => {
         setHydrated(true);
+
+        const controlador_mobile = (action: string) => {
+            switch(action){
+              case "2":
+                router.push("/home");
+              break;
+      
+              case "3":
+                router.push("/bankKnowledge")
+              break;
+            }
+          }
+
+        window.ipc.on('control-app-mobile', controlador_mobile);
+
+        return () => {
+            window.ipc.off('control-app-mobile');
+        };
     }, []);
 
     if (!hydrated) {

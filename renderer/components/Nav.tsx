@@ -137,8 +137,6 @@ export default function NavbarSimple() {
 
   const [editedTitle, setEditedTitle] = useState("");
 
-  const classifiers = useChatStore((state) => state.classifiers);
-
   const isSmall = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
 
   const links = chats.map((chat) => (

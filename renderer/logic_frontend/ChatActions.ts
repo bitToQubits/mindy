@@ -81,11 +81,16 @@ function pushMessageSystem(message: Message){
 }
 
 export const pushMessage = (message: Message) => {
+  console.log("what is happening");
   const chat = getChatById(get().chats, get().activeChatId);
+  const tasks = get().tasks;
+  console.log(tasks);
   if (chat === undefined) {
+    console.log("what is happening klk");
     console.error("Chat not found");
     return;
   }
+  console.log("what is happening loco");
   if(chat.messages.length == 0){
     pushMessageSystem(
       {
@@ -98,6 +103,14 @@ export const pushMessage = (message: Message) => {
         Mindset se creó en 2021. Mindy fue creada en 2022.
         La directora ejecutiva es Kamila Ureña. El CTO es Jorge Báez.
         Siempre hablarás en español.`,
+        role: "system",
+        type: "text",
+      },
+    );
+    pushMessageSystem(
+      {
+        id: "tareas",
+        content: `Tareas: ${JSON.stringify(tasks)}`,
         role: "system",
         type: "text",
       },

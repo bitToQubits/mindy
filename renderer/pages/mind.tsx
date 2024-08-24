@@ -9,12 +9,14 @@ import {
   import {
     IconTopologyStarRing3,
     IconBooks,
+    IconChecklist
   } from '@tabler/icons-react';
   import classes from '../css/ActionsGrid.module.css';
   
   const mockdata = [
     { title: 'Grafo de conocimiento', icon: IconTopologyStarRing3, color: 'indigo', href: '/bankKnowledge' },
     { title: 'Clasificación de data', icon: IconBooks, color: 'red', href: '/topicosClasificacion' },
+    { title: 'Administración de tareas', icon: IconChecklist, color: 'green', href: '/admin_tareas' },
   ];
   
   export default function Page(){

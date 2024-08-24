@@ -30,6 +30,7 @@
     "json2xls": "^0.1.2",
     "markdown-pdf": "^11.0.0",
     "markdown-to-jsx": "^7.4.7",
+    "mdns": "^2.7.2",
     "node-pandoc": "^0.3.0",
     "openai": "^4.38.2",
     "opus-encdec": "^0.1.1",
@@ -42,6 +43,8 @@
     "three": "^0.164.1",
     "unidecode": "^1.0.1",
     "uuid": "^9.0.1",
+    "ws": "^8.18.0",
+    "zeroconf": "^0.1.4",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

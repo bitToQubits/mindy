@@ -3,6 +3,7 @@ import { Message } from "./Message";
 import { persist } from "zustand/middleware";
 import { Chat } from "./Chat";
 import { Classifier } from "./Classifier";
+import { Task } from "./task";
 import type { AudioChunk } from "./PlayerActions";
 
 export type APIState = "idle" | "loading" | "error" | "ok" | "creating topic name" | "generating voice" | "Thinking of a image";
@@ -64,7 +65,7 @@ interface SettingsForm {
 }
 
 export const defaultSettings = {
-  model: "gpt-4o",
+  model: "gpt-4o-mini",
   temperature: 1,
   top_p: 1,
   n: 1,
@@ -102,6 +103,7 @@ export interface ChatState {
   
   chats: Chat[];
   classifiers: Classifier[];
+  tasks: Task[];
   activeChatId: string | undefined;
   actionRunning: boolean | undefined;
   colorScheme: "light" | "dark";
@@ -135,8 +137,8 @@ export interface ChatState {
   showTextDuringPTT: boolean;
   autoSendStreamingSTT: boolean;
   modelChoicesChat: string[] | undefined;
-  modelChoiceTTS: string | "openai";
-  // modelChoiceTTS: string | "openai";
+  //modelChoiceTTS: string | "openai";
+  modelChoiceTTS: string | "11labs";
   modelChoiceSTT: string | "whisper";
   textInputValue: string;
 }
@@ -149,6 +151,7 @@ export const initialState = {
 
   chats: [],
   classifiers: [],
+  tasks: [],
   activeChatId: undefined,
   actionRunning: false,
   colorScheme: "light" as "light" | "dark",
@@ -182,7 +185,7 @@ export const initialState = {
   autoSendStreamingSTT: true,
   modelChoicesChat: undefined,
   modelChoiceChat: undefined,
-  modelChoiceTTS: "openai",
+  modelChoiceTTS: "11labs",
   // modelChoiceTTS: "openai",
   modelChoiceSTT: "whisper",
   textInputValue: "",

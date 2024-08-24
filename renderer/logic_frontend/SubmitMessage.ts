@@ -112,7 +112,7 @@ export const submitMessage = async (message: Message) => {
 
   var settings = get().settingsForm;
 
-  settings.model = "gpt-4o";
+  settings.model = "gpt-4o-mini";
 
   const abortController = new AbortController();
   set((state) => ({
@@ -199,7 +199,7 @@ export const submitMessage = async (message: Message) => {
       numWords >= 4
     ) {
       console.log("Lo que clasifica al chat", chat.messages
-      .slice(2)
+      .slice(3)
       .map((m) => (m.type == "image") ? "" : (m.type == "text_image") ? m.content[0].text : m.content )
       .join("\n"));
       const msg = {
@@ -208,7 +208,7 @@ export const submitMessage = async (message: Message) => {
         ONLY THE TOPIC NAME, not like The topic is ..., only topic name. Don't include the word topic.
               >>>
               ${chat.messages
-                .slice(2)
+                .slice(3)
                 .map((m) => (m.type == "image") ? "" : (m.type == "text_image") ? m.content[0].text : m.content )
                 .join("\n")}
               >>>
@@ -264,8 +264,6 @@ export const submitMessage = async (message: Message) => {
 
     var msgs = [];
 
-    console.log("Classifiers: ",classifiers)
-
     msgs.push({
       content: `Classify the user topic in one of the following categories, 
                 if no one suits create a new category: ${classifiers
@@ -288,7 +286,7 @@ export const submitMessage = async (message: Message) => {
     });
 
     msgs.push({
-      content: chat.messages[2].content + " " + chat.title,
+      content: chat.messages[3].content + " " + chat.title,
       role: "user",
     })
 
@@ -334,7 +332,6 @@ export const submitMessage = async (message: Message) => {
                 },
               ]
             }));
-            console.log("Aqui el error con el imageName", imageName);
             window.ipc.off('download_request');
           })
         })

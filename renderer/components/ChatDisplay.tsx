@@ -98,7 +98,46 @@ const ChatDisplay = () => {
     };
   }, []);
 
+  const get = useChatStore.getState;
+  const set = useChatStore.setState;
+
   useEffect(() => {
+
+    const controlador_mobile = (action: string) => {
+      switch(action){
+        case "2":
+          router.push("/home");
+        break;
+  
+        case "3":
+          router.push("/bankKnowledge")
+        break;
+  
+        case "1":
+          if (audioState === "idle") {
+            Recorder.startRecording();
+            setText('Te escucho.');
+            setColor('red');
+          }
+        break;
+  
+        case "0":
+          Recorder.stopRecording(true);
+          setText('Tu amigo, pero mejor.');
+          setColor('white');
+
+        case "4":
+          const { playerState, playerRef } = get();
+          if (playerState === "playing") {
+            if (playerRef.current) {
+              playerRef.current.pause();
+            }
+            set({ playerState: "paused" });
+          }
+        break;
+      }
+    }
+
     const handleScroll = () => {
       setIsScrolledToBottom(scrolledToBottom());
     };
@@ -132,6 +171,7 @@ const ChatDisplay = () => {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener("scroll", handleScroll);
+    window.ipc.on('control-app-mobile', controlador_mobile)
 
     // Cleanup function to remove the event listener when the component unmounts
     
@@ -139,6 +179,7 @@ const ChatDisplay = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener('keyup', handleKeyUp);
+      window.ipc.off('control-app-mobile');
     };
   }, [audioState]);
 
@@ -149,6 +190,7 @@ const ChatDisplay = () => {
   }, [actionRunning]);
 
   useEffect(() => {
+
     const detenerAudio = () => {
       if(isPlaying){
         toggleAudio();
@@ -159,8 +201,6 @@ const ChatDisplay = () => {
       document.getElementById('pechurina').style.cursor = (isPlaying) ? "pointer" : "default";
       document.getElementById('pechurina').onclick = detenerAudio;
     }
-
-  
   }, [isPlaying]);
 
   let mediaElement;
@@ -217,7 +257,7 @@ const ChatDisplay = () => {
       bloomComposer.render();
     }
 
-    if(false && document.getElementById('pechurina') && document.querySelector('#pechurina').innerHTML == "" && document.querySelector('audio')){ 
+    if(document.getElementById('pechurina') && document.querySelector('#pechurina').innerHTML == "" && document.querySelector('audio')){ 
       renderer = new THREE.WebGLRenderer({antialias: true});
       tamanoMindyText = document.getElementById('mindyText')?.clientHeight + 20;
       largoReal = document.getElementById('contenedorGrafico')?.clientWidth;
@@ -442,7 +482,7 @@ const ChatDisplay = () => {
           <Grid.Col span={4}>
             <ScrollArea viewportRef={viewport} w="100%" h={580} type="auto" offsetScrollbars scrollbarSize={8}>
               <Box>
-                {activeChat?.messages.slice(2).map((message) => (
+                {activeChat?.messages.slice(3).map((message) => (
                 <ChatMessage key={message.id} message={message} />
                 ))}
               </Box>

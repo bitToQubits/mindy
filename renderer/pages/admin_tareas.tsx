@@ -4,9 +4,10 @@ import {
     Card,
     Text,
     createStyles,
-    Title,
     Badge
   } from '@mantine/core';
+
+import { useChatStore } from "../logic_frontend/ChatStore";
 
 const useStyles = createStyles(() => ({
     pointer: {
@@ -22,23 +23,29 @@ export default function Page(){
 
     const { classes } = useStyles();
 
+    const tasks = useChatStore(state => state.tasks);
+
     return (
         <Container {...demoProps}>
             <Grid>
                 <Grid.Col span={3}>
                     <Badge variant="light" color="blue">Tareas pendientes</Badge>
-                    <Card
-                        className={classes.pointer}
-                    >
+                    {
+                        tasks?.map((task) => (
+                            <Card
+                                className={classes.pointer}
+                            >
 
-                        <Text fw={500} size="lg" mt="md">
-                            You&apos;ve won a million dollars in cash!
-                        </Text>
+                                <Text fw={500} size="lg" mt="md">
+                                    {task.title}
+                                </Text>
 
-                        <Text mt="xs" c="dimmed" size="sm">
-                            Please click anywhere on this card to claim your reward, this is not a fraud, trust us
-                        </Text>
-                    </Card>
+                                <Text mt="xs" c="dimmed" size="sm">
+                                    {task.description}
+                                </Text>
+                            </Card>
+                        ))
+                    }
                 </Grid.Col>
                 <Grid.Col span={3}>
                     <Badge variant="light" color="blue">Prioridad baja</Badge>

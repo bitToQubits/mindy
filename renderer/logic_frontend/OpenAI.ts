@@ -145,6 +145,77 @@ export async function streamCompletion(
     {
       type: "function",
       function: {
+        name: "remove_task",
+        description: "Remove a task. The user must specify the id of the task.",
+        parameters: {
+          type: "object",
+          properties: {
+            "id": {
+              type: "string",
+              description: "The ID of the task",
+            },
+          },
+          required: ["id"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "create_task",
+        description: "Create a task. The user must specify the task name and the due date.",
+        parameters: {
+          type: "object",
+          properties: {
+            "task_name": {
+              type: "string",
+              description: "The name of the task",
+            },
+            "due_date": {
+              type: "string",
+              description: "The due date of the task.",
+            },
+            "description":{
+              type: "string",
+              description: "The description for the task"
+            }
+          },
+          required: ["task_name","due_date", "description"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "edit_task",
+        description: "Edit a task. The user must specify the task name and the due date, along with the ID.",
+        parameters: {
+          type: "object",
+          properties: {
+            "task_name": {
+              type: "string",
+              description: "The name of the task",
+            },
+            "due_date": {
+              type: "string",
+              description: "The due date of the task.",
+            },
+            "description":{
+              type: "string",
+              description: "The description for the task"
+            },
+            "id": {
+              type: "number",
+              description: "The ID of the task",
+            },
+          },
+          required: ["task_name","due_date", "description", "id"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
         name: "show_document",
         description: "Show a document created in this conversation. The user must specify the document name. REMEMBER the user with you can open or show/display the document.",
         parameters: {
@@ -217,31 +288,31 @@ export async function streamCompletion(
         },
       },
     },
-    {
-      type: "function",
-      function: {
-        name: "create_task_google_calendar",
-        description: "Create tasks in google calendar. When user asks to create a task, execute this function.",
-        parameters: {
-          type: "object",
-          properties: {
-            title: {
-              type: "string",
-              description: "The title for the task. Required",
-            },
-            description: {
-              type: "string",
-              description: "Task's description. Optional.",
-            },
-            dueDate: {
-              type: "string",
-              description: "The deadline or due time for the task. Required.",
-            },
-          },
-          required: ["title", "dueDate"],
-        },
-      },
-    },
+    // {
+    //   type: "function",
+    //   function: {
+    //     name: "create_task_google_calendar",
+    //     description: "Create tasks in google calendar. When user asks to create a task, execute this function.",
+    //     parameters: {
+    //       type: "object",
+    //       properties: {
+    //         title: {
+    //           type: "string",
+    //           description: "The title for the task. Required",
+    //         },
+    //         description: {
+    //           type: "string",
+    //           description: "Task's description. Optional.",
+    //         },
+    //         dueDate: {
+    //           type: "string",
+    //           description: "The deadline or due time for the task. Required.",
+    //         },
+    //       },
+    //       required: ["title", "dueDate"],
+    //     },
+    //   },
+    // },
     {
       type: "function",
       function: {
@@ -1010,7 +1081,7 @@ export async function streamCompletion(
             switch(voice){
 
               case "Default":
-                set({ modelChoiceTTS: "openai" });
+                set({ modelChoiceTTS: "11labs" });
                 notifications.show({
                   title: "Action completed",
                   message: "Voice changed to Default",
@@ -1119,13 +1190,12 @@ export async function streamCompletion(
 
             }
 
-            const activeChatId = get().activeChatId;
             if(founded){
               console.log("VOICE SUCESSFULLY CHANGED")
               set((state) => ({
                 ttsText: (state.ttsText || "") + "Voz cambiada correctamente a "+voice,
                 chats: state.chats.map((c) => {
-                  if (c.id === activeChatId) {
+                  if (c.id === get().activeChatId) {
                     if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                       if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                         c.messages[messages.length -1].content = "Voz cambió a "+voice;
@@ -1146,7 +1216,7 @@ export async function streamCompletion(
             }else{
               set((state) => ({
                 chats: state.chats.map((c) => {
-                  if (c.id === activeChatId) {
+                  if (c.id === get().activeChatId) {
                     if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
                       if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
                         c.messages[messages.length -1].content = "Error al intentar cambiar la voz";
@@ -1237,6 +1307,145 @@ export async function streamCompletion(
             });
             break;
 
+          case "create_task":
+
+            var tasks = get().tasks;
+            
+            tasks = tasks.sort((a, b) => b.id - a.id);
+
+            var id_task = 0;
+
+            if(typeof tasks[0] != "undefined"){
+              id_task = tasks[0].id + 1;
+            }
+            
+            set((state) => ({
+              tasks: [
+                ...state.tasks,
+                {
+                  id: id_task,
+                  title: sum.task_name,
+                  dueDate: new Date(sum.due_date),
+                  description: sum.description,
+                },
+              ]
+            }));
+
+            tasks = get().tasks;
+
+            set((state) => ({
+              chats: state.chats.map((c) => {
+                if (c.id === get().activeChatId) {
+                  if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
+                    c.messages[1].content = "Tareas: " + JSON.stringify(tasks);
+                    if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
+                      c.messages[messages.length -1].content = "Tarea agregada: " + sum.task_name;
+                    }else{
+                      c.messages.push({
+                        id: uuidv4(),
+                        content: "Tarea agregada: " + sum.task_name,
+                        role: "assistant",
+                        loading: false,
+                        type: "text",
+                      });
+                    }
+                  }
+                }
+                return c;
+              }),
+            }));
+
+            notifications.show({
+              title: "Acción completada",
+              message: "Tarea agregada con éxito",
+              color: "green",
+            });
+
+            break;
+
+          case "remove_task":
+
+            set((state) => ({
+              tasks: state.tasks.filter((tasks) => tasks.id != sum.id)
+            }));
+
+            var tasks = get().tasks;
+
+            set((state) => ({
+              chats: state.chats.map((c) => {
+                if (c.id === get().activeChatId) {
+                  if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
+                    c.messages[1].content = "Tareas: " + JSON.stringify(tasks);
+                    if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
+                      c.messages[messages.length -1].content = "Tarea eliminada.";
+                    }else{
+                      c.messages.push({
+                        id: uuidv4(),
+                        content: "Tarea eliminada.",
+                        role: "assistant",
+                        loading: false,
+                        type: "text",
+                      });
+                    }
+                  }
+                }
+                return c;
+              }),
+            }));
+
+            notifications.show({
+              title: "Acción completada",
+              message: "Tarea eliminada con éxito",
+              color: "green",
+            });
+
+            break;
+
+          case "edit_task":
+            
+            set((state) => ({
+              tasks: state.tasks.map((c) => {
+                if (c.id === sum.id) {
+                  c.title = sum.task_name;
+                  c.dueDate = new Date(sum.due_date);
+                  c.description = sum.description;
+                }
+                return c;
+              })
+            }));
+
+            var tasks = get().tasks;
+
+            set((state) => ({
+              chats: state.chats.map((c) => {
+                if (c.id === get().activeChatId) {
+                  if(c.messages.length > 0 && c.messages[c.messages.length -1].role == "assistant"){
+                    c.messages[1].content = "Tareas: " + JSON.stringify(tasks);
+                    if(c.messages[c.messages.length -1].content == "" || c.messages[c.messages.length -1].content == undefined){
+                      c.messages[messages.length -1].content = "Tarea editada: " + sum.task_name;
+                    }else{
+                      c.messages.push({
+                        id: uuidv4(),
+                        content: "Tarea editada: " + sum.task_name,
+                        role: "assistant",
+                        loading: false,
+                        type: "text",
+                      });
+                    }
+                  }
+                }
+                return c;
+              }),
+            }));
+
+            notifications.show({
+              title: "Acción completada",
+              message: "Tarea editada con éxito",
+              color: "green",
+            });
+
+            break;
+
         }
 
       }
@@ -1261,7 +1470,7 @@ export async function streamCompletion(
 export async function directResponse(messages: string[], api_key: string) {
   const response = await axios.post("https://api.openai.com/v1/chat/completions", {
     stream: false,
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     messages
   }, {
     headers: {

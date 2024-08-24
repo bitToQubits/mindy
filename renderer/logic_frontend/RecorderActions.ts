@@ -14,13 +14,16 @@ const get = useChatStore.getState;
 const set = useChatStore.setState;
 
 export const sendAudioData = async (blob: Blob) => {
+  console.log("en serio 17")
   const { audioChunks } = get();
+  console.log("bobobo 19")
   const newMessage = {
     id: uuidv4(),
     content: "",
     role: "user",
     type: "text"
   } as Message;
+  console.log("bobobo 26")
 
   pushMessage(newMessage);
   setApiState("loading");
@@ -56,7 +59,9 @@ export const startRecording = async () => {
       }));
     };
 
+    console.log("submitNextAudio", submitNextAudio)
     if (submitNextAudio) {
+      console.log("bobo entra 60")
       const blob = new Blob(get().audioChunks, { type: "audio/webm" });
 
       sendAudioData(blob).then(cleanup, cleanup);
@@ -132,6 +137,7 @@ export const destroyRecorder = async () => {
 };
 
 export const submitAudio = async (newMessage: Message, blob: Blob) => {
+  console.log("Entraaa aqui 135")
   const apiUrl = "https://api.openai.com/v1/audio/transcriptions";
 
   const { apiKey, settingsForm } = get();

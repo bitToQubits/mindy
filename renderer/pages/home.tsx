@@ -25,6 +25,42 @@ export default function Page(){
   var audioState = useChatStore((state) => state.audioState);
 
   var Recorder = OpusRecorder;
+
+  useEffect(() => {
+
+    const controlador_mobile = (action: string) => {
+      switch(action){
+        case "2":
+          router.push("/home");
+        break;
+
+        case "3":
+          router.push("/bankKnowledge")
+        break;
+
+        case "1":
+          if (audioState === "idle") {
+            Recorder.startRecording();
+            setText('Te escucho.');
+            setColor('red');
+          }
+        break;
+
+        case "0":
+          addChat(router);
+          Recorder.stopRecording(true);
+          setText('Tu amigo, pero mejor.');
+          setColor('white');
+        break;
+      }
+    }
+
+    window.ipc.on('control-app-mobile', controlador_mobile)
+    
+    return () => {
+      window.ipc.off('control-app-mobile');
+    };
+  }, [audioState]);
   
   useEffect(() => {
 
@@ -44,7 +80,7 @@ export default function Page(){
 
     const set = useChatStore.setState;
 
-    set({ modelChoiceTTS: "openai" });
+    set({ modelChoiceTTS: "11labs" });
 
     const handleKeyDown = (event) => {
       if (event.repeat) {
@@ -69,10 +105,10 @@ export default function Page(){
     
     const handleKeyUp = (event) => {
       if(event.key == "k"){
-        addChat(router);
         Recorder.stopRecording(true);
         setText('Tu amigo, pero mejor.');
         setColor('white');
+        addChat(router);
       }
     };
 

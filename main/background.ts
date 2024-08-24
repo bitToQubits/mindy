@@ -1,5 +1,5 @@
 import path from 'path'
-import { app, ipcMain, clipboard,nativeImage } from 'electron'
+import { app, ipcMain, clipboard,nativeImage, protocol } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
 import { chromium, firefox } from 'playwright-extra';
@@ -13,6 +13,8 @@ import { Groq } from "groq-sdk";
 
 const isProd = process.env.NODE_ENV === 'production'
 
+var mainWindow = null;
+
 if (isProd) {
   serve({ directory: 'app' })
 } else {
@@ -22,7 +24,7 @@ if (isProd) {
 ;(async () => {
   await app.whenReady()
 
-  const mainWindow = createWindow('main', {
+  mainWindow = createWindow('main', {
     width: 1323,
     height: 700,
     webPreferences: {
@@ -31,11 +33,11 @@ if (isProd) {
   })
 
   if (isProd) {
-    await mainWindow.loadURL('app://./admin_tareas');
+    await mainWindow.loadURL('app://./home');
   } else {
     const port = process.argv[2];
-    await mainWindow.loadURL(`http://localhost:${port}/admin_tareas`);
-    mainWindow.webContents.openDevTools()
+    await mainWindow.loadURL(`http://localhost:${port}/home`);
+    //mainWindow.webContents.openDevTools()
   } 
 })()
 
@@ -46,8 +48,6 @@ app.on('window-all-closed', () => {
 ipcMain.on('search_in_internet', async (event, argumentos) => {
   
   let busqueda_internet = argumentos.query;
-  
-  console.log("argumentos.query", argumentos.query);
 
   search_on_internet(busqueda_internet);
 
@@ -325,8 +325,7 @@ ipcMain.on('create_note', async (event, argumentos) => {
     }
 
     await page.waitForTimeout(2000);
-  }
-
+  } 
 
   var contenidos_elementos = await page.locator("#mw-content-text meta, p");
 
@@ -377,7 +376,7 @@ ipcMain.on('create_note', async (event, argumentos) => {
   browser.close();
   event.reply('create_note', respuesta);
 })
-
+ 
 ipcMain.on('create_event_google_calendar', async (event, argumentos) => {
 
     const title = argumentos.title;
@@ -768,7 +767,7 @@ ipcMain.on('create_documents', async (event, argumentos) => {
   let respuesta_division_tematica_openai = await openai_client.chat.completions.create({
     messages: [{"role": "system", "content": "Your task will be to divide a topic by thematic points. Output a list separated by comas, only the topic, subtopics and the comas. The topic will be preceed by -- to distinct itself from the subtopics."},
     {"role": "user", "content": tema}],
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
   });
  
   var division_temas = respuesta_division_tematica_openai.choices[0].message.content.split(",");
@@ -884,3 +883,67 @@ ipcMain.on('show_document', async (event, argumentos) => {
     event.reply('show_document', respuesta);
   }
 });
+
+const dgram = require('dgram');
+const WebSocket = require('ws');
+const { networkInterfaces } = require('os');
+console.log(getIpAddress())
+const serverInfo = {
+  name: "Mindy",
+  ip: getIpAddress(), // Replace with actual server IP
+  port: 4321
+};
+
+const socket = dgram.createSocket('udp4');
+socket.bind(12345);
+
+socket.on('message', (msg, rinfo) => {
+  if (rinfo.address !== getIpAddress()) {
+    console.log(`Solicitud de descubrimiento recibida de ${rinfo.address}:${rinfo.port}`);
+    const message = Buffer.from(JSON.stringify(serverInfo));
+    socket.send(message,0, message.length, rinfo.port, rinfo.address);
+  }
+});
+
+socket.on('listening', () => {
+  socket.setBroadcast(true);
+});
+
+setInterval(() => {
+  const message = Buffer.from(JSON.stringify(serverInfo));
+  socket.send(message, 0, message.length, 12345, '255.255.255.255', (err) => {
+    if (err) console.error('Failed to send broadcast:', err);
+  });
+}, 5000); // Broadcast every 5 seconds 
+
+const server = new WebSocket.Server({
+  port: 4321
+});
+
+server.on('connection', function(socket) {
+  // When you receive a message, send that message to every socket.
+  socket.on('message', function(msg) {
+    var msg_ = msg.toString("utf-8");
+    console.log(msg_);
+    mainWindow.webContents.send('control-app-mobile', msg_)
+  });
+
+  // When a socket closes, or disconnects, remove it from the array.
+  socket.on('close', function() {
+    console.log('disconnected');
+  });
+});
+
+function getIpAddress(){ 
+
+  const nets = networkInterfaces();
+
+  for (const name of Object.keys(nets)) {
+      for (const net of nets[name]) {
+          const familyV4Value = typeof net.family === 'string' ? 'IPv4' : 4
+          if (net.family === familyV4Value && !net.internal) {
+              return net.address;
+          }
+      }
+  }
+} 
