@@ -83,7 +83,7 @@ export const defaultSettings = {
   voice_id_openai: 'nova',
   tts_model_openai: "tts-1",
   // ElevenLabs
-  voice_id: "21m00Tcm4TlvDq8ikWAM",
+  voice_id: "cgSgspJ2msm6clMCkdW9",
   // Azure
   voice_id_azure: "en-US-JaneNeural",
   auto_detect_language_azure: true,
