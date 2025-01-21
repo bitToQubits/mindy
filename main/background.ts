@@ -53,7 +53,7 @@ ipcMain.on('search_in_internet', async (event, argumentos) => {
 
   function search_on_internet(query){
     axios.post('https://api.tavily.com/search/', {
-      "api_key": "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",
+      "api_key": "null",
       "query": "Responde en español: " + query,
       "search_depth": "basic",
       "include_answer": true,
