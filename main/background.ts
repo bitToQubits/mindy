@@ -762,7 +762,7 @@ ipcMain.on('create_documents', async (event, argumentos) => {
       texto_completo += response;
   }
 
-  const openai_client = new OpenAI({apiKey:"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"});
+  const openai_client = new OpenAI({apiKey:"null});
 
   let respuesta_division_tematica_openai = await openai_client.chat.completions.create({
     messages: [{"role": "system", "content": "Your task will be to divide a topic by thematic points. Output a list separated by comas, only the topic, subtopics and the comas. The topic will be preceed by -- to distinct itself from the subtopics."},
@@ -782,7 +782,7 @@ ipcMain.on('create_documents', async (event, argumentos) => {
 
   texto_completo+="# "+tema+"\n\n";
 
-  const groq = new Groq({apiKey:"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"});
+  const groq = new Groq({apiKey:"null"});
   
   for await (let subtema of division_temas){
     await generar_contenido(subtema).then(function () {
